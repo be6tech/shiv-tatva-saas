@@ -1,0 +1,48 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: shivtatva-postgres
+    environment:
+      POSTGRES_DB: shivtatva
+      POSTGRES_USER: shivtatva
+      POSTGRES_PASSWORD: shivtatva
+    ports:
+      - "5432:5432"
+    volumes:
+      - shivtatva_pgdata:/var/lib/postgresql/data
+
+  mysql:
+    image: mysql:8.4
+    container_name: shivtatva-mysql
+    environment:
+      MYSQL_DATABASE: shivtatva
+      MYSQL_USER: shivtatva
+      MYSQL_PASSWORD: shivtatva
+      MYSQL_ROOT_PASSWORD: shivtatva_root
+    ports:
+      - "3306:3306"
+    volumes:
+      - shivtatva_mysqldata:/var/lib/mysql
+
+  mongo:
+    image: mongo:7
+    container_name: shivtatva-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - shivtatva_mongodata:/data/db
+
+  redis:
+    image: redis:7-alpine
+    container_name: shivtatva-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - shivtatva_redisdata:/data
+
+volumes:
+  shivtatva_pgdata:
+  shivtatva_mysqldata:
+  shivtatva_mongodata:
+  shivtatva_redisdata:
+

@@ -1,0 +1,30 @@
+{
+  "name": "shivtatva",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "services/*",
+    "packages/*"
+  ],
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently -n api,web -c magenta,blue -k \"npm run dev:api\" \"npm run dev:web\"",
+    "dev:web": "npm run dev -w @shivtatva/web",
+    "dev:api": "npm run dev -w @shivtatva/api-gateway",
+    "build:web": "npm run build -w @shivtatva/web",
+    "lint:web": "npm run lint -w @shivtatva/web",
+    "check:api": "npm run check -w @shivtatva/api-gateway",
+    "ci": "npm run lint:web && npm run check:api && npm run build:web",
+    "infra:up": "echo \"Docker not installed. Install Docker Desktop, then run: cd infra && docker compose up -d\"",
+    "infra:down": "echo \"cd infra && docker compose down\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
