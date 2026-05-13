@@ -203,7 +203,7 @@ export default function CareersPage() {
               <div>
                 <div className={cn("text-base font-semibold", marketingStrong)}>Apply now</div>
                 <div className={cn("mt-1 text-sm", marketingBody)}>
-                  Applications go to the careers table (Supabase) and Careers sheet — separate from contact leads.
+                  Share your experience and the role you are applying for. We will get back to you shortly.
                 </div>
               </div>
               <div className="hidden items-center gap-2 rounded-full border border-border/70 bg-slate-50 px-3 py-1 text-xs text-slate-700 sm:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
