@@ -214,7 +214,6 @@ export default function CareersPage() {
                 <Sparkles className="h-3.5 w-3.5 text-[#ea580c] dark:text-[#f97316]" />
                 Careers inbox
               </div>
-              </div>
             </div>
 
             {ok ? (
