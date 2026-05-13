@@ -102,52 +102,48 @@ export default function CareersPage() {
       setMessage("");
     };
 
+    const applicationRef = `career-${Date.now()}`;
+
     try {
-      if (!shouldUseHostedLeadsApi()) {
-        const ref = `career-${Date.now()}`;
-        const saved = await saveCareerApplication(ref, payload);
-        if (saved) {
-          setOk(`Application received. Ref: ${ref}`);
-          resetForm();
-        } else {
-          setError(
-            "Could not save your application. Set SUPABASE_SERVICE_ROLE_KEY + NEXT_PUBLIC_SUPABASE_URL and run supabase/career_applications.sql, and/or GOOGLE_CAREERS_SHEET_WEBAPP_URL on your host, then redeploy."
-          );
-        }
+      const saved = await saveCareerApplication(applicationRef, payload);
+      if (!saved) {
+        setError(
+          "Could not save your application. In Supabase run apps/web/supabase/career_applications.sql, set SUPABASE_SERVICE_ROLE_KEY + NEXT_PUBLIC_SUPABASE_URL on Vercel, redeploy the latest code, and optionally set GOOGLE_CAREERS_SHEET_WEBAPP_URL."
+        );
         return;
       }
 
-      const r = await apiFetch<{ ok: boolean; leadId: string }>("/public/leads", {
-        method: "POST",
-        body: JSON.stringify({
-          name,
-          email,
-          company: "Candidate",
-          phone: phone || undefined,
-          message: [
-            `Role: ${role}`,
-            phone ? `Phone: ${phone}` : null,
-            portfolio ? `Portfolio/LinkedIn: ${portfolio}` : null,
-            "",
-            message,
-          ]
-            .filter(Boolean)
-            .join("\n"),
-          source: "careers",
-        }),
-      });
-      await saveCareerApplication(r.leadId, payload);
-      setOk(`Application received. Ref: ${r.leadId}`);
+      // Optional: admin leads inbox when api-gateway is reachable (does not use contact_leads).
+      if (shouldUseHostedLeadsApi()) {
+        try {
+          await apiFetch<{ ok: boolean; leadId: string }>("/public/leads", {
+            method: "POST",
+            body: JSON.stringify({
+              name,
+              email,
+              company: "Candidate",
+              phone: phone || undefined,
+              message: [
+                `Role: ${role}`,
+                phone ? `Phone: ${phone}` : null,
+                portfolio ? `Portfolio/LinkedIn: ${portfolio}` : null,
+                "",
+                message,
+              ]
+                .filter(Boolean)
+                .join("\n"),
+              source: "careers",
+            }),
+          });
+        } catch {
+          // Supabase / sheet already saved the application.
+        }
+      }
+
+      setOk(`Application received. Ref: ${applicationRef}`);
       resetForm();
     } catch (e) {
-      const ref = `career-${Date.now()}`;
-      const saved = await saveCareerApplication(ref, payload);
-      if (saved) {
-        setOk(`Application received. Ref: ${ref}`);
-        resetForm();
-      } else {
-        setError(e instanceof Error ? e.message : "Failed to submit application");
-      }
+      setError(e instanceof Error ? e.message : "Failed to submit application");
     } finally {
       setSubmitting(false);
     }
