@@ -1,8 +1,13 @@
 import type { AuthRole } from "@/store/slices/authSlice";
 
-export const API_BASE =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000";
-/** Used by marketing contact/careers forms: POST /public/leads — requires api-gateway (default port 4000). */
+/**
+ * Non-empty when set at **build** time. Deployed sites must set this to your public API gateway origin
+ * (e.g. `https://api.example.com`), or leave unset and use Supabase/Sheet-only flows from the contact page.
+ */
+export const LEADS_API_BASE_EXPLICIT = process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ?? "";
+
+export const API_BASE = LEADS_API_BASE_EXPLICIT || "http://localhost:4000";
+/** Used by marketing forms: POST /public/leads on api-gateway (defaults to localhost:4000 in dev). */
 
 export type LoginResponse = {
   token: string;

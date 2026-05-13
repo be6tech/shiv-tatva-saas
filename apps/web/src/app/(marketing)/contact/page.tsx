@@ -14,6 +14,7 @@ import { Mail, Phone, MessageCircle, Calendar, MapPin, Send, ExternalLink } from
 import { GOOGLE_MAPS_OFFICE_URL, OFFICE_LOCATION_FALLBACK, OSM_OFFICE_MAP_EMBED_SRC } from "@/lib/site-urls";
 import * as React from "react";
 import { apiFetch } from "@/lib/api";
+import { shouldUseHostedLeadsApi } from "@/lib/marketing-leads";
 
 function isNetworkFailure(e: unknown): boolean {
   const msg = e instanceof Error ? e.message : "";
@@ -55,7 +56,14 @@ async function mirrorToGoogleSheet(payload: {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-  return res.ok;
+  if (!res.ok) return false;
+  try {
+    const data = (await res.json()) as { ok?: boolean; skipped?: boolean };
+    if (data.skipped) return false;
+    return data.ok === true;
+  } catch {
+    return true;
+  }
 }
 
 async function mirrorContactIntegrations(leadId: string | null, payload: {
@@ -105,6 +113,30 @@ export default function ContactPage() {
       message,
     };
 
+    if (!shouldUseHostedLeadsApi()) {
+      const fallbackRef = `web-${Date.now()}`;
+      const supa = await mirrorToSupabase({ ...payload, lead_id: fallbackRef });
+      const sheet = await mirrorToGoogleSheet({
+        ...payload,
+        lead_id: fallbackRef,
+        source: "contact",
+      }).catch(() => false);
+      if (supa || sheet) {
+        setOk("Demo requested successfully.");
+        setName("");
+        setEmail("");
+        setCompany("");
+        setPhone("");
+        setMessage("");
+      } else {
+        setError(
+          "Could not save your request. In your hosting dashboard (e.g. Vercel → Environment Variables) add SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL), and/or GOOGLE_CONTACT_SHEET_WEBAPP_URL, then redeploy. Optional: set NEXT_PUBLIC_API_BASE_URL to your public API gateway if you run one."
+        );
+      }
+      setSubmitting(false);
+      return;
+    }
+
     try {
       const r = await apiFetch<{ ok: boolean; leadId: string }>("/public/leads", {
         method: "POST",
@@ -127,8 +159,13 @@ export default function ContactPage() {
     } catch (e) {
       if (isNetworkFailure(e)) {
         const fallbackRef = `web-${Date.now()}`;
-        const saved = await mirrorToSupabase({ ...payload, lead_id: fallbackRef });
-        await mirrorToGoogleSheet({ ...payload, lead_id: fallbackRef, source: "contact" }).catch(() => {});
+        const supa = await mirrorToSupabase({ ...payload, lead_id: fallbackRef });
+        const sheet = await mirrorToGoogleSheet({
+          ...payload,
+          lead_id: fallbackRef,
+          source: "contact",
+        }).catch(() => false);
+        const saved = supa || sheet;
         if (saved) {
           setOk("Demo requested successfully.");
           setName("");
@@ -138,7 +175,7 @@ export default function ContactPage() {
           setMessage("");
         } else {
           setError(
-            "Can't reach the API (leads service), and saving to backup failed. From the project root run `npm run dev` (API on port 4000 + web), or set NEXT_PUBLIC_API_BASE_URL. Check Supabase env (SUPABASE_SERVICE_ROLE_KEY) in .env.local."
+            "Can't reach the API (leads service), and backup save failed. Local: run `npm run dev` from the project root (API on port 4000) or set NEXT_PUBLIC_API_BASE_URL. Deployed: set SUPABASE_SERVICE_ROLE_KEY + NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL) and/or GOOGLE_CONTACT_SHEET_WEBAPP_URL on your host, then redeploy."
           );
         }
       } else {

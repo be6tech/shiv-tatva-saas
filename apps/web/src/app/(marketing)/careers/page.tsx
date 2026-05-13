@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { Briefcase, Rocket, Users, Send, Sparkles } from "lucide-react";
 import * as React from "react";
 import { apiFetch } from "@/lib/api";
+import { shouldUseHostedLeadsApi } from "@/lib/marketing-leads";
 
 const openings = [
   { title: "Full Stack Developer", type: "Full-time", location: "Hybrid", dept: "Engineering" },
@@ -33,7 +34,7 @@ export default function CareersPage() {
   const [ok, setOk] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
-  const apply = React.useCallback(() => {
+  const apply = React.useCallback(async () => {
     setSubmitting(true);
     setOk(null);
     setError(null);
@@ -47,27 +48,59 @@ export default function CareersPage() {
       .filter(Boolean)
       .join("\n");
 
-    apiFetch<{ ok: boolean; leadId: string }>("/public/leads", {
-      method: "POST",
-      body: JSON.stringify({
-        name,
-        email,
-        company: "Candidate",
-        phone: phone || undefined,
-        message: bodyMsg,
-        source: "careers",
-      }),
-    })
-      .then((r) => {
-        setOk(`Application received. Ref: ${r.leadId}`);
-        setName("");
-        setEmail("");
-        setPhone("");
-        setPortfolio("");
-        setMessage("");
-      })
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to submit application"))
-      .finally(() => setSubmitting(false));
+    try {
+      if (!shouldUseHostedLeadsApi()) {
+        const ref = `web-${Date.now()}`;
+        const res = await fetch("/api/integrations/supabase-contact-lead", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            email,
+            company: "Candidate",
+            phone: phone || null,
+            message: bodyMsg,
+            source: "careers",
+            lead_id: ref,
+          }),
+        });
+        if (res.ok) {
+          setOk(`Application received. Ref: ${ref}`);
+          setName("");
+          setEmail("");
+          setPhone("");
+          setPortfolio("");
+          setMessage("");
+        } else {
+          setError(
+            "Could not save your application. Add SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL) to your host env and redeploy, or set NEXT_PUBLIC_API_BASE_URL if you use the leads API."
+          );
+        }
+        return;
+      }
+
+      const r = await apiFetch<{ ok: boolean; leadId: string }>("/public/leads", {
+        method: "POST",
+        body: JSON.stringify({
+          name,
+          email,
+          company: "Candidate",
+          phone: phone || undefined,
+          message: bodyMsg,
+          source: "careers",
+        }),
+      });
+      setOk(`Application received. Ref: ${r.leadId}`);
+      setName("");
+      setEmail("");
+      setPhone("");
+      setPortfolio("");
+      setMessage("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to submit application");
+    } finally {
+      setSubmitting(false);
+    }
   }, [role, name, email, phone, portfolio, message]);
 
   return (
