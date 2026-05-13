@@ -9,17 +9,14 @@ function normalizeSupabaseProjectUrl(raw: string): string {
 type Body = {
   name?: string;
   email?: string;
-  company?: string | null;
   phone?: string | null;
+  role?: string;
+  portfolio?: string | null;
   message?: string;
-  source?: string;
-  lead_id?: string | null;
+  application_id?: string | null;
 };
 
-/**
- * Inserts into Supabase using the **service role** key (server only).
- * Never expose `SUPABASE_SERVICE_ROLE_KEY` to the browser.
- */
+/** Inserts into public.career_applications (server-only service role). */
 export async function POST(req: Request) {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
   const rawUrl =
@@ -39,17 +36,18 @@ export async function POST(req: Request) {
   const name = String(parsed.name ?? "").trim();
   const email = String(parsed.email ?? "").trim();
   const message = String(parsed.message ?? "").trim();
-  const company = parsed.company != null ? String(parsed.company).trim() || null : null;
+  const role = String(parsed.role ?? "").trim();
   const phone = parsed.phone != null ? String(parsed.phone).trim() || null : null;
-  const source = "contact";
-  const lead_id = parsed.lead_id != null ? String(parsed.lead_id).trim() || null : null;
+  const portfolio = parsed.portfolio != null ? String(parsed.portfolio).trim() || null : null;
+  const application_id =
+    parsed.application_id != null ? String(parsed.application_id).trim() || null : null;
 
-  if (name.length < 2 || !email.includes("@") || message.length < 10) {
+  if (name.length < 2 || !email.includes("@") || role.length < 2 || message.length < 10) {
     return NextResponse.json({ ok: false, error: "validation" }, { status: 400 });
   }
 
   const base = normalizeSupabaseProjectUrl(rawUrl);
-  const url = `${base}/rest/v1/contact_leads`;
+  const url = `${base}/rest/v1/career_applications`;
 
   const res = await fetch(url, {
     method: "POST",
@@ -62,11 +60,11 @@ export async function POST(req: Request) {
     body: JSON.stringify({
       name,
       email,
-      company,
       phone,
+      role,
+      portfolio,
       message,
-      source,
-      lead_id,
+      application_id,
     }),
   });
 

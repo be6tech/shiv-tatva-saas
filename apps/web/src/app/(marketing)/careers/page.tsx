@@ -23,6 +23,52 @@ const openings = [
   { title: "Intern - React / Next.js", type: "Internship", location: "Remote", dept: "Learning" },
 ];
 
+type CareerPayload = {
+  name: string;
+  email: string;
+  phone: string | null;
+  role: string;
+  portfolio: string | null;
+  message: string;
+};
+
+async function mirrorCareerToSupabase(
+  applicationId: string,
+  payload: CareerPayload
+): Promise<boolean> {
+  const res = await fetch("/api/integrations/supabase-career-application", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...payload, application_id: applicationId }),
+  });
+  return res.ok;
+}
+
+async function mirrorCareerToGoogleSheet(
+  applicationId: string,
+  payload: CareerPayload
+): Promise<boolean> {
+  const res = await fetch("/api/integrations/google-sheet-career-application", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ...payload, application_id: applicationId }),
+  });
+  if (!res.ok) return false;
+  try {
+    const data = (await res.json()) as { ok?: boolean; skipped?: boolean };
+    if (data.skipped) return false;
+    return data.ok === true;
+  } catch {
+    return true;
+  }
+}
+
+async function saveCareerApplication(applicationId: string, payload: CareerPayload) {
+  const supa = await mirrorCareerToSupabase(applicationId, payload);
+  const sheet = await mirrorCareerToGoogleSheet(applicationId, payload).catch(() => false);
+  return supa || sheet;
+}
+
 export default function CareersPage() {
   const [role, setRole] = React.useState(openings[0]!.title);
   const [name, setName] = React.useState("");
@@ -38,42 +84,34 @@ export default function CareersPage() {
     setSubmitting(true);
     setOk(null);
     setError(null);
-    const bodyMsg = [
-      `Role: ${role}`,
-      phone ? `Phone: ${phone}` : null,
-      portfolio ? `Portfolio/LinkedIn: ${portfolio}` : null,
-      "",
+
+    const payload: CareerPayload = {
+      name,
+      email,
+      phone: phone || null,
+      role,
+      portfolio: portfolio || null,
       message,
-    ]
-      .filter(Boolean)
-      .join("\n");
+    };
+
+    const resetForm = () => {
+      setName("");
+      setEmail("");
+      setPhone("");
+      setPortfolio("");
+      setMessage("");
+    };
 
     try {
       if (!shouldUseHostedLeadsApi()) {
-        const ref = `web-${Date.now()}`;
-        const res = await fetch("/api/integrations/supabase-contact-lead", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            name,
-            email,
-            company: "Candidate",
-            phone: phone || null,
-            message: bodyMsg,
-            source: "careers",
-            lead_id: ref,
-          }),
-        });
-        if (res.ok) {
+        const ref = `career-${Date.now()}`;
+        const saved = await saveCareerApplication(ref, payload);
+        if (saved) {
           setOk(`Application received. Ref: ${ref}`);
-          setName("");
-          setEmail("");
-          setPhone("");
-          setPortfolio("");
-          setMessage("");
+          resetForm();
         } else {
           setError(
-            "Could not save your application. Add SUPABASE_SERVICE_ROLE_KEY and NEXT_PUBLIC_SUPABASE_URL (or SUPABASE_URL) to your host env and redeploy, or set NEXT_PUBLIC_API_BASE_URL if you use the leads API."
+            "Could not save your application. Set SUPABASE_SERVICE_ROLE_KEY + NEXT_PUBLIC_SUPABASE_URL and run supabase/career_applications.sql, and/or GOOGLE_CAREERS_SHEET_WEBAPP_URL on your host, then redeploy."
           );
         }
         return;
@@ -86,18 +124,30 @@ export default function CareersPage() {
           email,
           company: "Candidate",
           phone: phone || undefined,
-          message: bodyMsg,
+          message: [
+            `Role: ${role}`,
+            phone ? `Phone: ${phone}` : null,
+            portfolio ? `Portfolio/LinkedIn: ${portfolio}` : null,
+            "",
+            message,
+          ]
+            .filter(Boolean)
+            .join("\n"),
           source: "careers",
         }),
       });
+      await saveCareerApplication(r.leadId, payload);
       setOk(`Application received. Ref: ${r.leadId}`);
-      setName("");
-      setEmail("");
-      setPhone("");
-      setPortfolio("");
-      setMessage("");
+      resetForm();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to submit application");
+      const ref = `career-${Date.now()}`;
+      const saved = await saveCareerApplication(ref, payload);
+      if (saved) {
+        setOk(`Application received. Ref: ${ref}`);
+        resetForm();
+      } else {
+        setError(e instanceof Error ? e.message : "Failed to submit application");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -157,12 +207,13 @@ export default function CareersPage() {
               <div>
                 <div className={cn("text-base font-semibold", marketingStrong)}>Apply now</div>
                 <div className={cn("mt-1 text-sm", marketingBody)}>
-                  This application submits into the Admin Leads inbox instantly.
+                  Applications go to the careers table (Supabase) and Careers sheet — separate from contact leads.
                 </div>
               </div>
               <div className="hidden items-center gap-2 rounded-full border border-border/70 bg-slate-50 px-3 py-1 text-xs text-slate-700 sm:inline-flex dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
                 <Sparkles className="h-3.5 w-3.5 text-[#ea580c] dark:text-[#f97316]" />
-                Auto-routing enabled
+                Careers inbox
+              </div>
               </div>
             </div>
 

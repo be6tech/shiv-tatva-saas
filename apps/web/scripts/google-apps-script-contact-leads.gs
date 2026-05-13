@@ -38,9 +38,19 @@ function doPost(e) {
     }
 
     var ss = SpreadsheetApp.openById(SPREADSHEET_ID);
-    var sheet = ss.getSheetByName("Sheet1");
+    var sheet = ss.getSheetByName("Contact");
     if (!sheet) {
-      sheet = ss.getSheets()[0];
+      sheet = ss.insertSheet("Contact");
+      sheet.appendRow([
+        "Timestamp",
+        "Name",
+        "Email",
+        "Company",
+        "Phone",
+        "Message",
+        "Source",
+        "Lead ID",
+      ]);
     }
 
     sheet.appendRow([
