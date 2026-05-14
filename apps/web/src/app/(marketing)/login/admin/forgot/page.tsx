@@ -2,24 +2,26 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Mail } from "lucide-react";
+import { Mail, ArrowLeft } from "lucide-react";
 import * as React from "react";
+import { useRouter } from "next/navigation";
 import { marketingPageRoot, marketingSurface, marketingInput } from "@/components/marketing/marketing-styles";
 import { cn } from "@/lib/utils";
 import { ADMIN_EMAIL_DEFAULT } from "@/lib/admin-auth-constants";
 
 export default function AdminForgotPasswordPage() {
+  const router = useRouter();
   const [email, setEmail] = React.useState(ADMIN_EMAIL_DEFAULT);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
-  const [resetPath, setResetPath] = React.useState<string | null>(null);
   const [message, setMessage] = React.useState<string | null>(null);
+  const [devOtp, setDevOtp] = React.useState<string | null>(null);
 
   const onSubmit = async () => {
     setLoading(true);
     setError(null);
-    setResetPath(null);
     setMessage(null);
+    setDevOtp(null);
     try {
       const res = await fetch("/api/auth/admin/forgot-password", {
         method: "POST",
@@ -30,14 +32,24 @@ export default function AdminForgotPasswordPage() {
         ok?: boolean;
         message?: string;
         resetPath?: string;
+        devOtp?: string;
         error?: string;
       };
       if (!res.ok) {
-        setError(data.error === "not_configured" ? "Password reset is not configured on the server." : "Request failed.");
+        setError(
+          data.error === "not_configured"
+            ? "Password reset is not configured on the server."
+            : data.error === "email_not_configured"
+              ? "Email delivery is not configured. Set RESEND_API_KEY or SMTP on the server."
+              : "Request failed."
+        );
         return;
       }
-      setMessage(data.message ?? "If that admin account exists, a reset link has been created.");
-      if (data.resetPath) setResetPath(data.resetPath);
+      setMessage(data.message ?? "If that admin account exists, a 6-digit code has been sent to your email.");
+      if (data.devOtp) setDevOtp(data.devOtp);
+      if (data.resetPath) {
+        setTimeout(() => router.push(data.resetPath!), 1500);
+      }
     } catch {
       setError("Can't reach the server. Try again.");
     } finally {
@@ -64,7 +76,7 @@ export default function AdminForgotPasswordPage() {
         </div>
 
         <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
-          Enter your admin email. A one-time reset link is stored in the database (valid 1 hour).
+          Enter your admin email. We will send a 6-digit OTP to your inbox (valid 15 minutes).
         </p>
 
         <div className="mt-5 grid gap-3">
@@ -82,18 +94,12 @@ export default function AdminForgotPasswordPage() {
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ea580c] to-[#fb923c] px-4 py-3 text-sm font-semibold text-white dark:from-[#f97316] dark:to-amber-400"
           >
             <Mail className="h-4 w-4" />
-            {loading ? "Creating link…" : "Create reset link"}
+            {loading ? "Sending OTP…" : "Send OTP to email"}
           </button>
           {message ? (
             <div className="rounded-xl border border-emerald-200/80 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-100/90">
               {message}
-              {resetPath ? (
-                <p className="mt-2 break-all">
-                  <Link href={resetPath} className="font-medium underline">
-                    Open reset page
-                  </Link>
-                </p>
-              ) : null}
+              {devOtp ? <p className="mt-2 font-mono font-semibold">Dev OTP: {devOtp}</p> : null}
             </div>
           ) : null}
           {error ? (
@@ -103,13 +109,13 @@ export default function AdminForgotPasswordPage() {
           ) : null}
           <Link
             href="/login/admin"
-            className="text-sm font-medium text-slate-600 underline-offset-4 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-white"
+            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 underline-offset-4 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-white"
           >
-            ← Back to admin login
+            <ArrowLeft className="h-4 w-4" />
+            Back to admin login
           </Link>
         </div>
       </div>
     </div>
   );
 }
-

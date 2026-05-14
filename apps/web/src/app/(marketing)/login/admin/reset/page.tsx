@@ -7,11 +7,12 @@ import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { marketingPageRoot, marketingSurface, marketingInput } from "@/components/marketing/marketing-styles";
 import { cn } from "@/lib/utils";
+import { ADMIN_EMAIL_DEFAULT } from "@/lib/admin-auth-constants";
 
 function AdminResetPasswordForm() {
   const searchParams = useSearchParams();
-  const tokenFromUrl = searchParams.get("token") ?? "";
-
+  const [email, setEmail] = React.useState(searchParams.get("email") ?? ADMIN_EMAIL_DEFAULT);
+  const [otp, setOtp] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -28,8 +29,8 @@ function AdminResetPasswordForm() {
       setError("Passwords do not match.");
       return;
     }
-    if (!tokenFromUrl) {
-      setError("Missing reset token. Use the link from forgot password.");
+    if (!email.includes("@") || otp.trim().length < 6) {
+      setError("Enter your email and the 6-digit OTP from your inbox.");
       return;
     }
 
@@ -38,15 +39,15 @@ function AdminResetPasswordForm() {
       const res = await fetch("/api/auth/admin/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: tokenFromUrl, password }),
+        body: JSON.stringify({ email, otp: otp.trim(), password }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
       if (!res.ok) {
         const msg =
-          data.error === "invalid_token"
-            ? "This reset link is invalid."
-            : data.error === "token_expired"
-              ? "This reset link has expired. Request a new one."
+          data.error === "invalid_otp"
+            ? "Invalid OTP. Check the code from your email."
+            : data.error === "otp_expired"
+              ? "OTP expired. Request a new one."
               : data.error === "not_configured"
                 ? "Password reset is not configured on the server."
                 : "Could not reset password. Try again.";
@@ -75,7 +76,7 @@ function AdminResetPasswordForm() {
           </div>
           <div>
             <div className="text-sm font-medium text-slate-600 dark:text-slate-400">Admin</div>
-            <div className="text-lg font-semibold text-slate-900 dark:text-white">Set new password</div>
+            <div className="text-lg font-semibold text-slate-900 dark:text-white">Reset with OTP</div>
           </div>
         </div>
 
@@ -94,8 +95,25 @@ function AdminResetPasswordForm() {
         ) : (
           <div className="mt-5 grid gap-3">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Choose a new password for your admin account.
+              Enter the 6-digit OTP sent to your email and choose a new password.
             </p>
+            <input
+              className={marketingInput}
+              type="email"
+              placeholder="Admin email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            <input
+              className={marketingInput}
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              placeholder="6-digit OTP"
+              maxLength={6}
+              value={otp}
+              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            />
             <input
               className={marketingInput}
               type="password"
@@ -116,7 +134,7 @@ function AdminResetPasswordForm() {
             <button
               type="button"
               onClick={onSubmit}
-              disabled={loading || !tokenFromUrl}
+              disabled={loading}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ea580c] to-[#fb923c] px-4 py-3 text-sm font-semibold text-white dark:from-[#f97316] dark:to-amber-400"
             >
               <KeyRound className="h-4 w-4" />
@@ -131,7 +149,7 @@ function AdminResetPasswordForm() {
               href="/login/admin/forgot"
               className="text-sm font-medium text-slate-600 underline-offset-4 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-white"
             >
-              Request a new reset link
+              Resend OTP
             </Link>
           </div>
         )}

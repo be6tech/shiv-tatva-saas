@@ -2,7 +2,7 @@ import { PageShell } from "@/components/marketing/page-shell";
 import { marketingSurfaceHover, marketingBody, marketingStrong } from "@/components/marketing/marketing-styles";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { Sparkles, ArrowLeft } from "lucide-react";
 
 export default function LoginLanding() {
   return (
@@ -10,6 +10,13 @@ export default function LoginLanding() {
       title="Login"
       subtitle="Choose your portal. Admin and Employee experiences are separate for security and role-based access."
     >
+      <Link
+        href="/"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-slate-600 hover:text-[#ea580c] dark:text-slate-400 dark:hover:text-[#f97316]"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        Back to website
+      </Link>
       <div className="grid gap-4 md:grid-cols-2">
         <Link href="/login/admin" className={cn(marketingSurfaceHover, "block p-7")}>
           <div className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-slate-50 px-3 py-1 text-xs text-slate-600 dark:border-white/10 dark:bg-white/5 dark:text-slate-300">
