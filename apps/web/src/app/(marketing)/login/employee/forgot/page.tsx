@@ -2,26 +2,23 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Mail, ArrowLeft } from "lucide-react";
+import { KeyRound, ArrowLeft } from "lucide-react";
 import * as React from "react";
-import { useRouter } from "next/navigation";
 import { marketingPageRoot, marketingSurface, marketingInput } from "@/components/marketing/marketing-styles";
 import { cn } from "@/lib/utils";
-import { EMPLOYEE_ID_DEFAULT } from "@/lib/employee-auth-constants";
 
 export default function EmployeeForgotPasswordPage() {
-  const router = useRouter();
-  const [identifier, setIdentifier] = React.useState(EMPLOYEE_ID_DEFAULT);
+  const [identifier, setIdentifier] = React.useState("");
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const [message, setMessage] = React.useState<string | null>(null);
-  const [devOtp, setDevOtp] = React.useState<string | null>(null);
+  const [resetPath, setResetPath] = React.useState<string | null>(null);
 
   const onSubmit = async () => {
     setLoading(true);
     setError(null);
     setMessage(null);
-    setDevOtp(null);
+    setResetPath(null);
     try {
       const res = await fetch("/api/auth/employee/forgot-password", {
         method: "POST",
@@ -32,38 +29,21 @@ export default function EmployeeForgotPasswordPage() {
         ok?: boolean;
         message?: string;
         resetPath?: string;
-        devOtp?: string;
         error?: string;
         hint?: string;
-        detail?: string;
       };
       if (!res.ok) {
-        const hint = data.hint ? ` ${data.hint}` : "";
         setError(
           data.error === "not_configured"
-            ? `Server not configured.${hint || " Set SUPABASE_SERVICE_ROLE_KEY on Vercel."}`
-            : data.error === "email_not_configured"
-              ? `Email not configured.${hint || " Add RESEND_API_KEY on Vercel and redeploy."}`
-              : data.error === "email_send_failed" || data.error === "resend_domain_required"
-                ? data.error === "resend_domain_required"
-                  ? data.detail ??
-                    "Resend requires a verified domain to email employees. Set RESEND_TEST_INBOX=ganeshbandaru800@gmail.com on Vercel for testing."
-                  : `Could not send email.${hint || ""}${data.detail ? ` (${data.detail})` : ""}`
-                : data.error === "service_unavailable"
-                  ? "Can't reach Supabase. Try again in a moment."
-                  : data.error === "save_failed"
-                    ? data.hint ?? "Could not save OTP. Run supabase/employee_users.sql in Supabase."
-                    : data.detail
-                      ? `Request failed: ${data.detail}`
-                      : `Request failed.${hint}`
+            ? `Server not configured.${data.hint ? ` ${data.hint}` : " Set SUPABASE_SERVICE_ROLE_KEY on Vercel."}`
+            : data.error === "save_failed"
+              ? data.hint ?? "Could not create reset link. Run supabase/employee_users.sql in Supabase."
+              : "Request failed."
         );
         return;
       }
-      setMessage(data.message ?? "If that employee account exists, a 6-digit code has been sent to your email.");
-      if (data.devOtp) setDevOtp(data.devOtp);
-      if (data.resetPath && !data.devOtp) {
-        setTimeout(() => router.push(data.resetPath!), 1500);
-      }
+      setMessage(data.message ?? "If that employee account exists, a reset link has been created.");
+      if (data.resetPath) setResetPath(data.resetPath);
     } catch {
       setError("Can't reach the server. Try again.");
     } finally {
@@ -90,8 +70,7 @@ export default function EmployeeForgotPasswordPage() {
         </div>
 
         <p className="mt-4 text-sm text-slate-600 dark:text-slate-400">
-          Enter your employee ID or work email. We will send a 6-digit OTP to your registered email (valid 15
-          minutes).
+          Enter your employee ID or work email to generate a one-time reset link (valid for 1 hour).
         </p>
 
         <div className="mt-5 grid gap-3">
@@ -107,13 +86,20 @@ export default function EmployeeForgotPasswordPage() {
             disabled={loading || !identifier.trim()}
             className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ea580c] to-[#fb923c] px-4 py-3 text-sm font-semibold text-white dark:from-[#f97316] dark:to-amber-400"
           >
-            <Mail className="h-4 w-4" />
-            {loading ? "Sending OTP…" : "Send OTP to email"}
+            <KeyRound className="h-4 w-4" />
+            {loading ? "Creating link…" : "Create reset link"}
           </button>
           {message ? (
             <div className="rounded-xl border border-emerald-200/80 bg-emerald-50 p-3 text-sm text-emerald-900 dark:border-emerald-500/25 dark:bg-emerald-500/10 dark:text-emerald-100/90">
               {message}
-              {devOtp ? <p className="mt-2 font-mono font-semibold">Dev OTP: {devOtp}</p> : null}
+              {resetPath ? (
+                <Link
+                  href={resetPath}
+                  className="mt-2 block font-medium text-[#ea580c] underline dark:text-[#f97316]"
+                >
+                  Open reset page →
+                </Link>
+              ) : null}
             </div>
           ) : null}
           {error ? (

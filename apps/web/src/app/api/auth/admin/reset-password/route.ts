@@ -1,12 +1,12 @@
 import { NextResponse } from "next/server";
 import {
-  fetchAdminByEmail,
+  fetchAdminByResetToken,
   getSupabaseAdminConfig,
   hashPassword,
   patchAdmin,
 } from "@/lib/admin-auth";
 
-type Body = { email?: string; otp?: string; token?: string; password?: string };
+type Body = { token?: string; password?: string };
 
 export async function POST(req: Request) {
   if (!getSupabaseAdminConfig()) {
@@ -20,27 +20,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid_json" }, { status: 400 });
   }
 
-  const email = String(parsed.email ?? "")
-    .trim()
-    .toLowerCase();
-  const otp = String(parsed.otp ?? parsed.token ?? "").trim();
+  const token = String(parsed.token ?? "").trim();
   const password = String(parsed.password ?? "");
-
-  if (!email.includes("@") || otp.length < 6 || password.length < 8) {
+  if (token.length < 16 || password.length < 8) {
     return NextResponse.json({ ok: false, error: "validation" }, { status: 400 });
   }
 
-  const admin = await fetchAdminByEmail(email);
-  if (!admin?.reset_token || !admin.reset_token_expires_at) {
-    return NextResponse.json({ ok: false, error: "invalid_otp" }, { status: 400 });
+  const admin = await fetchAdminByResetToken(token);
+  if (!admin?.reset_token_expires_at) {
+    return NextResponse.json({ ok: false, error: "invalid_token" }, { status: 400 });
   }
 
   if (new Date(admin.reset_token_expires_at).getTime() < Date.now()) {
-    return NextResponse.json({ ok: false, error: "otp_expired" }, { status: 400 });
-  }
-
-  if (admin.reset_token !== otp) {
-    return NextResponse.json({ ok: false, error: "invalid_otp" }, { status: 400 });
+    return NextResponse.json({ ok: false, error: "token_expired" }, { status: 400 });
   }
 
   const saved = await patchAdmin(admin.id, {

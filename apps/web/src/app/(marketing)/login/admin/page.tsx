@@ -10,12 +10,11 @@ import { LoginDashboardContinue } from "@/components/auth/login-dashboard-contin
 import { LoginErrorAlert } from "@/components/auth/login-error-alert";
 import { marketingPageRoot, marketingSurface, marketingInput } from "@/components/marketing/marketing-styles";
 import { cn } from "@/lib/utils";
-import { ADMIN_EMAIL_DEFAULT } from "@/lib/admin-auth-constants";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const auth = useAuth();
-  const [identifier, setIdentifier] = React.useState(ADMIN_EMAIL_DEFAULT);
+  const [identifier, setIdentifier] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);

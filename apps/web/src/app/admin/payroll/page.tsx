@@ -45,7 +45,7 @@ export default function AdminPayrollPage() {
   const [rows, setRows] = React.useState<PayslipRow[]>([]);
   const [employees, setEmployees] = React.useState<ApiEmployee[]>([]);
 
-  const [employeeId, setEmployeeId] = React.useState("ST-EMP-001");
+  const [employeeId, setEmployeeId] = React.useState("");
   const [month, setMonth] = React.useState(() => new Date().toISOString().slice(0, 7));
   const [basic, setBasic] = React.useState(65000);
   const [hra, setHra] = React.useState(18000);
@@ -291,13 +291,12 @@ export default function AdminPayrollPage() {
               value={employeeId}
               onChange={(e) => setEmployeeId(e.target.value)}
             >
-              {(employees.length ? employees : [{ id: "ST-EMP-001", name: "Demo Employee", department: "", designation: "", status: "" }]).map(
-                (emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name} ({emp.id})
-                  </option>
-                )
-              )}
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.name} ({emp.id})
+                </option>
+              ))}
+              {!employees.length ? <option value="">No employees loaded</option> : null}
             </select>
             <input
               className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"

@@ -6,7 +6,7 @@ import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/features/auth/useAuth";
 import * as React from "react";
-import { Building2, Mail, Users, Pencil, Save, X } from "lucide-react";
+import { Building2, Mail, Users, Pencil, Save, X, UserPlus } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 
 type ApiEmployee = {
@@ -31,9 +31,12 @@ export default function AdminEmployeesPage() {
   const [rows, setRows] = React.useState<ApiEmployee[]>([]);
 
   const [editOpen, setEditOpen] = React.useState(false);
+  const [modalMode, setModalMode] = React.useState<"edit" | "create">("edit");
   const [editSaving, setEditSaving] = React.useState(false);
   const [editError, setEditError] = React.useState<string | null>(null);
   const [selected, setSelected] = React.useState<ApiEmployee | null>(null);
+
+  const [fId, setFId] = React.useState("");
 
   const [fName, setFName] = React.useState("");
   const [fDept, setFDept] = React.useState("");
@@ -75,8 +78,10 @@ export default function AdminEmployeesPage() {
   }, [loadEmployees]);
 
   const openEdit = React.useCallback((emp: ApiEmployee) => {
+    setModalMode("edit");
     setSelected(emp);
     setEditError(null);
+    setFId(emp.id ?? "");
     setFName(emp.name ?? "");
     setFDept(emp.department ?? "");
     setFDesig(emp.designation ?? "");
@@ -90,6 +95,99 @@ export default function AdminEmployeesPage() {
     setFSkills((emp.skills ?? []).join(", "));
     setEditOpen(true);
   }, []);
+
+  const openCreate = React.useCallback(() => {
+    setModalMode("create");
+    setSelected(null);
+    setEditError(null);
+    setFId("");
+    setFName("");
+    setFDept("");
+    setFDesig("ASSOCIATE TRAINEE");
+    setFStatus("Active");
+    setFEmail("");
+    setFPhone("");
+    setFLocation("Hyderabad");
+    setFLinkedin("");
+    setFJoinedAt(new Date().toISOString().slice(0, 10));
+    setFExp("0");
+    setFSkills("");
+    setEditOpen(true);
+  }, []);
+
+  const saveCreate = React.useCallback(() => {
+    if (!auth.token) return;
+    const id = fId.trim().toUpperCase();
+    if (!id || !fName.trim() || !fDept.trim() || !fDesig.trim() || !fEmail.trim()) {
+      setEditError("Employee ID, name, department, designation, and email are required.");
+      return;
+    }
+    setEditSaving(true);
+    setEditError(null);
+    const exp = fExp.trim() === "" ? 0 : Number(fExp);
+    const skills = fSkills
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    apiFetch<{ ok: boolean; employee: ApiEmployee }>("/admin/employees", {
+      method: "POST",
+      token: auth.token,
+      body: JSON.stringify({
+        id,
+        name: fName.trim(),
+        department: fDept.trim(),
+        designation: fDesig.trim(),
+        status: fStatus.trim() || "Active",
+        email: fEmail.trim(),
+        phone: fPhone.trim() || undefined,
+        location: fLocation.trim() || undefined,
+        linkedin: fLinkedin.trim() || undefined,
+        joinedAt: fJoinedAt || undefined,
+        experienceYears: Number.isFinite(exp) ? exp : 0,
+        skills: skills.length ? skills : [],
+        shiftId: "morning",
+      }),
+    })
+      .then(async (r) => {
+        const loginRes = await fetch("/api/admin/employees", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${auth.token}`,
+          },
+          body: JSON.stringify({ employeeId: id, email: fEmail.trim() }),
+        });
+        const loginData = (await loginRes.json()) as { ok?: boolean; error?: string; hint?: string };
+        if (!loginRes.ok) {
+          throw new Error(
+            loginData.hint ??
+              loginData.error ??
+              "Employee saved to HRMS but login account could not be created in Supabase."
+          );
+        }
+        setRows((prev) => [r.employee, ...prev]);
+        setEditOpen(false);
+        loadEmployees();
+      })
+      .catch((e) => setEditError(e instanceof Error ? e.message : "Failed to add employee"))
+      .finally(() => setEditSaving(false));
+  }, [
+    auth.token,
+    fId,
+    fName,
+    fDept,
+    fDesig,
+    fStatus,
+    fEmail,
+    fPhone,
+    fLocation,
+    fLinkedin,
+    fJoinedAt,
+    fExp,
+    fSkills,
+    loadEmployees,
+  ]);
 
   const saveEdit = React.useCallback(() => {
     if (!auth.token || !selected) return;
@@ -176,11 +274,21 @@ export default function AdminEmployeesPage() {
         </div>
 
         <div className={cn("lg:col-span-8", marketingSurface, "overflow-hidden p-0")}>
-          <div className="px-6 py-5 border-b border-white/10">
-            <div className="text-base font-semibold">Employee List</div>
-            <div className="mt-1 text-sm text-slate-600 dark:text-slate-300/90">
-              Loaded from API Gateway (JWT-protected).
+          <div className="px-6 py-5 border-b border-white/10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <div className="text-base font-semibold">Employee List</div>
+              <div className="mt-1 text-sm text-slate-600 dark:text-slate-300/90">
+                Add manually — saved to HRMS database and Supabase login automatically.
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={openCreate}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-[#f97316] to-[#fb923c] hover:opacity-95 transition"
+            >
+              <UserPlus className="h-4 w-4" />
+              Add employee
+            </button>
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-[900px] w-full text-sm">
@@ -245,14 +353,33 @@ export default function AdminEmployeesPage() {
           if (editSaving) return;
           setEditOpen(false);
         }}
-        title={selected ? `Edit Employee • ${selected.name}` : "Edit Employee"}
+        title={
+          modalMode === "create"
+            ? "Add Employee"
+            : selected
+              ? `Edit Employee • ${selected.name}`
+              : "Edit Employee"
+        }
       >
         {editError ? (
           <div className="mb-4 rounded-2xl bg-red-500/10 ring-1 ring-red-500/20 p-4 text-xs text-red-200/90">
             {editError}
           </div>
         ) : null}
+        {modalMode === "create" ? (
+          <p className="mb-4 text-xs text-slate-600 dark:text-slate-400">
+            Default login password is <span className="font-semibold">demo</span> until the employee changes it.
+          </p>
+        ) : null}
         <div className="grid gap-3 sm:grid-cols-2">
+          {modalMode === "create" ? (
+            <input
+              className="sm:col-span-2 h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#f97316]/40"
+              placeholder="Employee ID (e.g. BE19990034)"
+              value={fId}
+              onChange={(e) => setFId(e.target.value.toUpperCase())}
+            />
+          ) : null}
           <input
             className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#f97316]/40"
             placeholder="Full name"
@@ -337,12 +464,16 @@ export default function AdminEmployeesPage() {
           </button>
           <button
             type="button"
-            onClick={saveEdit}
-            disabled={editSaving || !selected}
+            onClick={modalMode === "create" ? saveCreate : saveEdit}
+            disabled={editSaving || (modalMode === "edit" && !selected)}
             className="inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#f97316] to-[#fb923c] disabled:opacity-60"
           >
             <Save className="h-4 w-4" />
-            {editSaving ? "Saving…" : "Save changes"}
+            {editSaving
+              ? "Saving…"
+              : modalMode === "create"
+                ? "Add employee"
+                : "Save changes"}
           </button>
         </div>
       </Modal>

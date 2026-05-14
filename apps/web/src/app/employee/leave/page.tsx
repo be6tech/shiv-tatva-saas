@@ -131,8 +131,6 @@ export default function EmployeeLeavePage() {
           <div className="mt-4 grid gap-3">
             {[
               { label: "Annual", value: "10 days" },
-              { label: "Sick", value: "6 days" },
-              { label: "WFH", value: "4 days" },
             ].map((b) => (
               <div key={b.label} className="rounded-3xl bg-white/5 ring-1 ring-white/10 p-5">
                 <div className="text-xs text-slate-300/70">{b.label}</div>

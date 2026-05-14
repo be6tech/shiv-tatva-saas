@@ -1,0 +1,379 @@
+{
+  "employees": [
+    {
+      "id": "BE19990002",
+      "name": "Kumar",
+      "department": "HR",
+      "designation": "HRM",
+      "status": "Active",
+      "email": "kumarhrmbe6@gmail.com",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "HR operations",
+        "Talent management",
+        "HRMS"
+      ],
+      "experienceYears": 8
+    },
+    {
+      "id": "BE19990003",
+      "name": "Kesava",
+      "department": "Learning & Development",
+      "designation": "ASSOCIATE TRAINEE",
+      "status": "Active",
+      "email": "sakichennakesavulu5@gmail.com",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "On-the-job training",
+        "Fundamentals",
+        "Team collaboration"
+      ],
+      "experienceYears": 0
+    },
+    {
+      "id": "BE19990005",
+      "name": "Uma",
+      "department": "Learning & Development",
+      "designation": "ASSOCIATE TRAINEE",
+      "status": "Active",
+      "email": "uma@be6technologies.in",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "On-the-job training",
+        "Fundamentals",
+        "Team collaboration"
+      ],
+      "experienceYears": 0
+    },
+    {
+      "id": "BE19990006",
+      "name": "Venkata Sai",
+      "department": "Engineering",
+      "designation": "DEVELOPER",
+      "status": "Active",
+      "email": "venkatasai@be6technologies.in",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "Software development",
+        "Collaboration",
+        "Code quality"
+      ],
+      "experienceYears": 2
+    },
+    {
+      "id": "BE19990012",
+      "name": "Naveen Goud",
+      "department": "Business Development",
+      "designation": "BDE",
+      "status": "Active",
+      "email": "naveench9997@gmail.com",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "Business development",
+        "Client outreach",
+        "CRM"
+      ],
+      "experienceYears": 2
+    },
+    {
+      "id": "BE19990013",
+      "name": "Faizan Ali",
+      "department": "Engineering",
+      "designation": "DEVELOPER",
+      "status": "Active",
+      "email": "faizanali@be6technologies.in",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "Software development",
+        "Collaboration",
+        "Code quality"
+      ],
+      "experienceYears": 2
+    },
+    {
+      "id": "BE19990015",
+      "name": "Pavani",
+      "department": "HR",
+      "designation": "HR",
+      "status": "Active",
+      "email": "pavanihr@be6technologies.in",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "HR operations",
+        "Talent management",
+        "HRMS"
+      ],
+      "experienceYears": 3
+    },
+    {
+      "id": "BE19990016",
+      "name": "Suma",
+      "department": "Business Development",
+      "designation": "BDE",
+      "status": "Active",
+      "email": "boddapatisumasuma@gmail.com",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "Business development",
+        "Client outreach",
+        "CRM"
+      ],
+      "experienceYears": 2
+    },
+    {
+      "id": "BE19990017",
+      "name": "Kumar Swamy",
+      "department": "Learning & Development",
+      "designation": "ASSOCIATE TRAINEE",
+      "status": "Active",
+      "email": "kumarswamy@be6technologies.in",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "On-the-job training",
+        "Fundamentals",
+        "Team collaboration"
+      ],
+      "experienceYears": 0
+    },
+    {
+      "id": "BE19990021",
+      "name": "Phaneendra",
+      "department": "Learning & Development",
+      "designation": "ASSOCIATE TRAINEE",
+      "status": "Active",
+      "email": "phaneendra@be6technologies.in",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "On-the-job training",
+        "Fundamentals",
+        "Team collaboration"
+      ],
+      "experienceYears": 0
+    },
+    {
+      "id": "BE19990022",
+      "name": "Durga Prasad",
+      "department": "Learning & Development",
+      "designation": "ASSOCIATE TRAINEE",
+      "status": "Active",
+      "email": "durgaprasad@be6technologies.in",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "On-the-job training",
+        "Fundamentals",
+        "Team collaboration"
+      ],
+      "experienceYears": 0
+    },
+    {
+      "id": "BE19990023",
+      "name": "Raghu Ram",
+      "department": "Learning & Development",
+      "designation": "ASSOCIATE TRAINEE",
+      "status": "Active",
+      "email": "raghuramkedasu2002@gmail.com",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "On-the-job training",
+        "Fundamentals",
+        "Team collaboration"
+      ],
+      "experienceYears": 0
+    },
+    {
+      "id": "BE19990027",
+      "name": "Kotha Nagaraju",
+      "department": "Learning & Development",
+      "designation": "ASSOCIATE TRAINEE",
+      "status": "Active",
+      "email": "nagaraju@be6technologies.in",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "On-the-job training",
+        "Fundamentals",
+        "Team collaboration"
+      ],
+      "experienceYears": 0
+    },
+    {
+      "id": "BE19990028",
+      "name": "Sreekanth Pendluru",
+      "department": "Business Development",
+      "designation": "BDE",
+      "status": "Active",
+      "email": "sreekanthp98614@gmail.com",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "Business development",
+        "Client outreach",
+        "CRM"
+      ],
+      "experienceYears": 2
+    },
+    {
+      "id": "BE19990030",
+      "name": "Naga Durga Rao",
+      "department": "Learning & Development",
+      "designation": "ASSOCIATE TRAINEE",
+      "status": "Active",
+      "email": "ndrnimmagadda@gmail.com",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "On-the-job training",
+        "Fundamentals",
+        "Team collaboration"
+      ],
+      "experienceYears": 0
+    },
+    {
+      "id": "BE19990031",
+      "name": "Lavanya Bypureddi",
+      "department": "Business Development",
+      "designation": "BDE",
+      "status": "Active",
+      "email": "lavanyabypureddy61@gmail.com",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "Business development",
+        "Client outreach",
+        "CRM"
+      ],
+      "experienceYears": 2
+    },
+    {
+      "id": "BE19990033",
+      "name": "Dileep Kumar",
+      "department": "Learning & Development",
+      "designation": "ASSOCIATE TRAINEE",
+      "status": "Active",
+      "email": "dileepkumarg557@gmail.com",
+      "phone": "",
+      "location": "Hyderabad",
+      "joinedAt": "2024-06-01",
+      "skills": [
+        "On-the-job training",
+        "Fundamentals",
+        "Team collaboration"
+      ],
+      "experienceYears": 0
+    }
+  ],
+  "attendance": {},
+  "employeeShift": {
+    "BE19990002": "morning",
+    "BE19990003": "morning",
+    "BE19990005": "morning",
+    "BE19990006": "morning",
+    "BE19990012": "morning",
+    "BE19990013": "morning",
+    "BE19990015": "morning",
+    "BE19990016": "morning",
+    "BE19990017": "morning",
+    "BE19990021": "morning",
+    "BE19990022": "morning",
+    "BE19990023": "morning",
+    "BE19990027": "morning",
+    "BE19990028": "morning",
+    "BE19990030": "morning",
+    "BE19990031": "morning",
+    "BE19990033": "morning"
+  },
+  "leaveRequests": [
+    {
+      "id": "LV-MP56UBL6-N8JII9",
+      "employeeId": "ST-EMP-001",
+      "employeeName": "Demo Employee",
+      "department": "Engineering",
+      "type": "Sick",
+      "from": "2026-05-15",
+      "to": "2026-05-16",
+      "durationDays": 2,
+      "reason": "due to forget mind in office",
+      "status": "Approved",
+      "createdAt": "2026-05-14T07:49:51.786Z",
+      "updatedAt": "2026-05-14T07:57:06.736Z",
+      "history": [
+        {
+          "at": "2026-05-14T07:57:06.736Z",
+          "by": "admin@shivtatva.com",
+          "action": "Approved",
+          "note": ""
+        },
+        {
+          "at": "2026-05-14T07:49:51.786Z",
+          "by": "ST-EMP-001",
+          "action": "Applied"
+        }
+      ]
+    }
+  ],
+  "tasks": [],
+  "payslips": [],
+  "notifications": [
+    {
+      "id": "NTF-MP573N74-5NA1GH",
+      "scope": "employee",
+      "recipientId": "ST-EMP-001",
+      "severity": "success",
+      "category": "leave",
+      "title": "Leave approved",
+      "message": "Sick leave 2026-05-15 → 2026-05-16 was approved.",
+      "createdAt": "2026-05-14T07:57:06.736Z",
+      "read": false
+    },
+    {
+      "id": "NTF-MP56UBL6-3114M5",
+      "scope": "admin",
+      "recipientId": null,
+      "severity": "info",
+      "category": "leave",
+      "title": "Leave request submitted",
+      "message": "Demo Employee (ST-EMP-001) requested Sick leave: 2026-05-15 → 2026-05-16 (2 days)",
+      "createdAt": "2026-05-14T07:49:51.786Z",
+      "read": false
+    }
+  ],
+  "leads": [],
+  "anomalyEmitted": {},
+  "orgSettings": {
+    "companyName": "Shiv Tatva Solutions Private Limited",
+    "supportEmail": "support@shivtatva.com",
+    "supportPhone": "+91 90000 00000",
+    "locationText": "Cohort Coworking Space, 1st Floor, Kondapur, Hyderabad",
+    "workHoursPerDay": 8,
+    "lateThresholdMinutes": 10,
+    "anomalySpikeRatio": 0.4
+  }
+}

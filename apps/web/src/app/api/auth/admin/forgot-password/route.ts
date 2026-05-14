@@ -2,13 +2,9 @@ import { NextResponse } from "next/server";
 import {
   fetchAdminByEmail,
   getSupabaseAdminConfig,
+  newResetToken,
   patchAdmin,
 } from "@/lib/admin-auth";
-import { generateOtp, otpExpiresAt } from "@/lib/password-reset-otp";
-import {
-  isPasswordResetEmailConfigured,
-  sendPasswordResetOtpEmail,
-} from "@/lib/password-reset-email";
 
 type Body = { email?: string };
 
@@ -31,70 +27,27 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "validation" }, { status: 400 });
   }
 
-  const generic = {
-    ok: true,
-    message: "If that admin account exists, a 6-digit code has been sent to your email.",
-  };
-
   const admin = await fetchAdminByEmail(email);
   if (!admin) {
-    return NextResponse.json(generic);
+    return NextResponse.json({
+      ok: true,
+      message: "If that admin account exists, a reset link has been created.",
+    });
   }
 
-  const otp = generateOtp();
-  const expires = otpExpiresAt();
+  const token = newResetToken();
+  const expires = new Date(Date.now() + 60 * 60 * 1000).toISOString();
   const saved = await patchAdmin(admin.id, {
-    reset_token: otp,
+    reset_token: token,
     reset_token_expires_at: expires,
   });
   if (!saved) {
     return NextResponse.json({ ok: false, error: "save_failed" }, { status: 502 });
   }
 
-  if (!isPasswordResetEmailConfigured()) {
-    if (process.env.NODE_ENV === "development") {
-      return NextResponse.json({
-        ...generic,
-        message: "Email is not configured. Use this OTP in dev:",
-        devOtp: otp,
-        resetPath: `/login/admin/reset?email=${encodeURIComponent(email)}`,
-      });
-    }
-    return NextResponse.json(
-      {
-        ok: false,
-        error: "email_not_configured",
-        hint: "Add RESEND_API_KEY and PASSWORD_RESET_FROM_EMAIL on Vercel, then redeploy.",
-      },
-      { status: 503 }
-    );
-  }
-
-  const sent = await sendPasswordResetOtpEmail({
-    to: admin.email,
-    otp,
-    portalLabel: "Admin login",
-  });
-  if (!sent.ok) {
-    return NextResponse.json(
-      {
-        ok: false,
-        error: sent.code ?? "email_send_failed",
-        detail: sent.error,
-        hint:
-          sent.code === "resend_domain_required"
-            ? "Verify your domain at resend.com/domains, or set RESEND_TEST_INBOX to your Resend signup email for testing."
-            : undefined,
-      },
-      { status: 502 }
-    );
-  }
-
   return NextResponse.json({
-    ...generic,
-    resetPath: `/login/admin/reset?email=${encodeURIComponent(email)}`,
-    message: sent.testInbox
-      ? `OTP sent to ${sent.sentTo} (test inbox). Code is for ${admin.email}.`
-      : generic.message,
+    ok: true,
+    message: "Reset link created. It is valid for 1 hour.",
+    resetPath: `/login/admin/reset?token=${token}`,
   });
 }

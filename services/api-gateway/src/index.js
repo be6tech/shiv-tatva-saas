@@ -202,6 +202,67 @@ app.put("/employee/profile", requireAuth({ roles: ["employee", "admin"] }), (req
   res.json({ ok: true, employee: updated });
 });
 
+app.post("/admin/employees", requireAuth({ roles: ["admin"] }), (req, res) => {
+  const schema = z.object({
+    id: z.string().min(3).max(40).regex(/^[A-Za-z0-9_-]+$/),
+    name: z.string().min(2).max(80),
+    department: z.string().min(2).max(80),
+    designation: z.string().min(2).max(80),
+    status: z.string().min(2).max(40).optional(),
+    email: z.string().email(),
+    phone: z.string().min(0).max(30).optional(),
+    location: z.string().min(0).max(80).optional(),
+    linkedin: z.string().max(200).optional(),
+    skills: z.array(z.string().min(1).max(40)).max(40).optional(),
+    experienceYears: z.number().nonnegative().max(60).optional(),
+    joinedAt: z.string().optional(),
+    shiftId: z.string().min(2).max(40).optional(),
+  });
+  const parsed = schema.safeParse(req.body);
+  if (!parsed.success) return res.status(400).json({ error: "invalid_body" });
+
+  const id = parsed.data.id.trim().toUpperCase();
+  if (findEmployee(id)) return res.status(409).json({ error: "employee_exists" });
+  const emailTaken = employees.some(
+    (e) => String(e.email ?? "").toLowerCase() === parsed.data.email.toLowerCase()
+  );
+  if (emailTaken) return res.status(409).json({ error: "email_exists" });
+
+  const now = new Date().toISOString().slice(0, 10);
+  const created = {
+    id,
+    name: parsed.data.name.trim(),
+    department: parsed.data.department.trim(),
+    designation: parsed.data.designation.trim(),
+    status: parsed.data.status?.trim() || "Active",
+    email: parsed.data.email.trim().toLowerCase(),
+    phone: parsed.data.phone?.trim() || "",
+    location: parsed.data.location?.trim() || "Hyderabad",
+    linkedin: parsed.data.linkedin?.trim() || "",
+    joinedAt: parsed.data.joinedAt || now,
+    skills: parsed.data.skills ?? [],
+    experienceYears: parsed.data.experienceYears ?? 0,
+  };
+
+  upsertEmployee(created);
+  const shiftId = parsed.data.shiftId || "morning";
+  if (shiftTypes.some((s) => s.id === shiftId)) {
+    employeeShift.set(created.id, shiftId);
+  } else {
+    employeeShift.set(created.id, "morning");
+  }
+  scheduleSave();
+
+  notifyAdmin({
+    severity: "success",
+    category: "system",
+    title: "Employee added",
+    message: `${created.name} (${created.id}) was added to the directory.`,
+  });
+
+  res.status(201).json({ ok: true, employee: created });
+});
+
 app.put("/admin/employees/:id", requireAuth({ roles: ["admin"] }), (req, res) => {
   const id = String(req.params.id || "");
   const emp = findEmployee(id);
@@ -313,7 +374,7 @@ const attendanceKey = (dateKey, employeeId) => `${dateKey}:${employeeId}`;
 const attendanceStore = new Map();
 
 const shiftTypes = [
-  { id: "morning", name: "Morning Shift", start: "09:00", end: "18:00" },
+  { id: "morning", name: "Morning Shift", start: "09:30", end: "18:30" },
   { id: "evening", name: "Evening Shift", start: "13:00", end: "22:00" },
   { id: "night", name: "Night Shift", start: "22:00", end: "07:00" },
   { id: "flex", name: "Flexible Shift", start: "Flexible", end: "Flexible" },

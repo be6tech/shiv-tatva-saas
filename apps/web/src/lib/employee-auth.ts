@@ -8,15 +8,11 @@ import {
   jwtSecretBytes,
 } from "@/lib/admin-auth";
 import {
-  EMPLOYEE_EMAIL_DEFAULT,
-  EMPLOYEE_ID_DEFAULT,
   EMPLOYEE_ROSTER,
   EMPLOYEE_SEED_PASSWORD_HASH,
 } from "@/lib/employee-auth-constants";
 
 export {
-  EMPLOYEE_EMAIL_DEFAULT,
-  EMPLOYEE_ID_DEFAULT,
   EMPLOYEE_ROSTER,
   EMPLOYEE_SEED_PASSWORD_HASH,
 } from "@/lib/employee-auth-constants";
@@ -131,19 +127,18 @@ export async function ensureEmployeeRow(
   return rows[0] ?? null;
 }
 
-export async function saveEmployeeResetOtp(
+export async function saveEmployeeResetToken(
   employeeId: string,
   email: string,
-  otp: string,
+  token: string,
   expires: string
-): Promise<EmployeeRow | null> {
+): Promise<boolean> {
   const row = await ensureEmployeeRow(employeeId, email);
-  if (!row) return null;
-  const ok = await patchEmployee(row.id, {
-    reset_token: otp,
+  if (!row) return false;
+  return patchEmployee(row.id, {
+    reset_token: token,
     reset_token_expires_at: expires,
   });
-  return ok ? { ...row, reset_token: otp, reset_token_expires_at: expires } : null;
 }
 
 export async function signEmployeeToken(employeeId: string): Promise<string> {

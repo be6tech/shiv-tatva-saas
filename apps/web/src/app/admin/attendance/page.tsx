@@ -48,6 +48,8 @@ export default function AdminAttendancePage() {
   );
   const [live, setLive] = React.useState<LiveStatusRow[]>([]);
   const [shifts, setShifts] = React.useState<ShiftInfo[]>([]);
+  const [shiftEmployees, setShiftEmployees] = React.useState<{ id: string; name: string }[]>([]);
+  const [shiftEmployeeId, setShiftEmployeeId] = React.useState("");
   const [assigning, setAssigning] = React.useState(false);
   const [dept, setDept] = React.useState<string>("All");
   const refresh = React.useCallback(() => {
@@ -85,6 +87,13 @@ export default function AdminAttendancePage() {
     apiFetch<{ shifts: ShiftInfo[] }>("/admin/shifts", { token: auth.token })
       .then((r) => setShifts(r.shifts ?? []))
       .catch(() => setShifts([]));
+    apiFetch<{ employees: { id: string; name: string }[] }>("/admin/employees", { token: auth.token })
+      .then((r) => {
+        const list = r.employees ?? [];
+        setShiftEmployees(list);
+        if (list.length) setShiftEmployeeId((prev) => prev || list[0]!.id);
+      })
+      .catch(() => setShiftEmployees([]));
     return () => {
       cancelled = true;
       window.clearInterval(t);
@@ -290,20 +299,36 @@ export default function AdminAttendancePage() {
             <div className="mt-5 space-y-3">
               <div className="rounded-3xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 p-4">
                 <div className="text-xs text-slate-600 dark:text-slate-400">Employee</div>
-                <div className="mt-1 text-sm font-semibold">ST-EMP-001</div>
+                <select
+                  className="mt-2 h-11 w-full rounded-2xl bg-slate-950/40 ring-1 ring-white/10 px-4 text-sm outline-none"
+                  value={shiftEmployeeId}
+                  onChange={(e) => setShiftEmployeeId(e.target.value)}
+                  disabled={!shiftEmployees.length}
+                >
+                  {shiftEmployees.map((emp) => (
+                    <option key={emp.id} value={emp.id} className="bg-slate-950">
+                      {emp.name} ({emp.id})
+                    </option>
+                  ))}
+                  {!shiftEmployees.length ? (
+                    <option value="" className="bg-slate-950">
+                      No employees loaded
+                    </option>
+                  ) : null}
+                </select>
               </div>
               <div className="rounded-3xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 p-4">
                 <div className="text-xs text-slate-600 dark:text-slate-400">Shift</div>
                 <select
                   className="mt-2 h-11 w-full rounded-2xl bg-slate-950/40 ring-1 ring-white/10 px-4 text-sm outline-none"
                   onChange={async (e) => {
-                    if (!auth.token) return;
+                    if (!auth.token || !shiftEmployeeId) return;
                     setAssigning(true);
                     try {
                       await apiFetch<{ ok: boolean }>("/admin/shifts/assign", {
                         method: "POST",
                         token: auth.token,
-                        body: JSON.stringify({ employeeId: "ST-EMP-001", shiftId: e.target.value }),
+                        body: JSON.stringify({ employeeId: shiftEmployeeId, shiftId: e.target.value }),
                       });
                       const r = await apiFetch<{ rows: any[] }>("/admin/live-status", { token: auth.token });
                       setLive(r.rows ?? []);

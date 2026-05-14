@@ -49,9 +49,11 @@ export default function AdminDashboard() {
     <DashboardShell role="admin" title="Dashboard">
       <div className="space-y-4">
           <div className="glass rounded-3xl p-6">
-            <div className="text-sm text-slate-600 dark:text-slate-300/80">Command Center</div>
+            <div className="text-sm text-slate-600 dark:text-slate-300/80">
+              Welcome back{auth.userId?.includes("@") ? `, ${auth.userId}` : ""}
+            </div>
             <div className="mt-1 text-xl font-semibold text-foreground">
-              Enterprise HRMS + Attendance + Analytics
+              Admin Command Center
             </div>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300/90">
               Monitor workforce status, attendance reports, payroll summaries, and actionable alerts.

@@ -7,14 +7,10 @@ import * as React from "react";
 import { useSearchParams } from "next/navigation";
 import { marketingPageRoot, marketingSurface, marketingInput } from "@/components/marketing/marketing-styles";
 import { cn } from "@/lib/utils";
-import { EMPLOYEE_ID_DEFAULT } from "@/lib/employee-auth-constants";
 
 function EmployeeResetPasswordForm() {
   const searchParams = useSearchParams();
-  const [identifier, setIdentifier] = React.useState(
-    searchParams.get("identifier") ?? EMPLOYEE_ID_DEFAULT
-  );
-  const [otp, setOtp] = React.useState("");
+  const token = searchParams.get("token") ?? "";
   const [password, setPassword] = React.useState("");
   const [confirm, setConfirm] = React.useState("");
   const [loading, setLoading] = React.useState(false);
@@ -31,8 +27,8 @@ function EmployeeResetPasswordForm() {
       setError("Passwords do not match.");
       return;
     }
-    if (!identifier.trim() || otp.trim().length < 6) {
-      setError("Enter your employee ID/email and the 6-digit OTP from your inbox.");
+    if (token.length < 16) {
+      setError("Invalid or missing reset link. Request a new one from forgot password.");
       return;
     }
 
@@ -41,15 +37,15 @@ function EmployeeResetPasswordForm() {
       const res = await fetch("/api/auth/employee/reset-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ identifier, otp: otp.trim(), password }),
+        body: JSON.stringify({ token, password }),
       });
       const data = (await res.json()) as { ok?: boolean; error?: string };
       if (!res.ok) {
         const msg =
-          data.error === "invalid_otp"
-            ? "Invalid OTP. Check the code from your email."
-            : data.error === "otp_expired"
-              ? "OTP expired. Request a new one."
+          data.error === "invalid_token"
+            ? "Invalid reset link. Request a new one."
+            : data.error === "token_expired"
+              ? "Reset link expired. Request a new one."
               : data.error === "not_configured"
                 ? "Password reset is not configured on the server."
                 : "Could not reset password. Try again.";
@@ -78,7 +74,7 @@ function EmployeeResetPasswordForm() {
           </div>
           <div>
             <div className="text-sm font-medium text-slate-600 dark:text-slate-400">Employee</div>
-            <div className="text-lg font-semibold text-slate-900 dark:text-white">Reset with OTP</div>
+            <div className="text-lg font-semibold text-slate-900 dark:text-white">Reset password</div>
           </div>
         </div>
 
@@ -97,24 +93,8 @@ function EmployeeResetPasswordForm() {
         ) : (
           <div className="mt-5 grid gap-3">
             <p className="text-sm text-slate-600 dark:text-slate-400">
-              Enter the 6-digit OTP sent to your registered email and choose a new password.
+              Choose a new password for your employee account.
             </p>
-            <input
-              className={marketingInput}
-              placeholder="Employee ID / Email"
-              value={identifier}
-              onChange={(e) => setIdentifier(e.target.value)}
-            />
-            <input
-              className={marketingInput}
-              type="text"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              placeholder="6-digit OTP"
-              maxLength={6}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-            />
             <input
               className={marketingInput}
               type="password"
@@ -135,7 +115,7 @@ function EmployeeResetPasswordForm() {
             <button
               type="button"
               onClick={onSubmit}
-              disabled={loading}
+              disabled={loading || token.length < 16}
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ea580c] to-[#fb923c] px-4 py-3 text-sm font-semibold text-white dark:from-[#f97316] dark:to-amber-400"
             >
               <KeyRound className="h-4 w-4" />
@@ -150,7 +130,7 @@ function EmployeeResetPasswordForm() {
               href="/login/employee/forgot"
               className="text-sm font-medium text-slate-600 underline-offset-4 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-white"
             >
-              Resend OTP
+              Request new reset link
             </Link>
           </div>
         )}

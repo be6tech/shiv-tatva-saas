@@ -10,12 +10,11 @@ import { LoginDashboardContinue } from "@/components/auth/login-dashboard-contin
 import { LoginErrorAlert } from "@/components/auth/login-error-alert";
 import { marketingPageRoot, marketingSurface, marketingInput } from "@/components/marketing/marketing-styles";
 import { cn } from "@/lib/utils";
-import { EMPLOYEE_ID_DEFAULT } from "@/lib/employee-auth-constants";
 
 export default function EmployeeLoginPage() {
   const router = useRouter();
   const auth = useAuth();
-  const [identifier, setIdentifier] = React.useState(EMPLOYEE_ID_DEFAULT);
+  const [identifier, setIdentifier] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);

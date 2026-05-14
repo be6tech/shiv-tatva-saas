@@ -41,7 +41,7 @@ export default function AdminTasksPage() {
   const [rows, setRows] = React.useState<TaskRow[]>([]);
   const [employees, setEmployees] = React.useState<ApiEmployee[]>([]);
 
-  const [assigneeId, setAssigneeId] = React.useState<string>("ST-EMP-001");
+  const [assigneeId, setAssigneeId] = React.useState<string>("");
   const [title, setTitle] = React.useState("");
   const [description, setDescription] = React.useState("");
   const [priority, setPriority] = React.useState<TaskPriority>("Medium");
@@ -114,13 +114,12 @@ export default function AdminTasksPage() {
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
             >
-              {(employees.length ? employees : [{ id: "ST-EMP-001", name: "Demo Employee", department: "Engineering", designation: "", status: "" }]).map(
-                (emp) => (
-                  <option key={emp.id} value={emp.id}>
-                    {emp.name} ({emp.id})
-                  </option>
-                )
-              )}
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.id}>
+                  {emp.name} ({emp.id})
+                </option>
+              ))}
+              {!employees.length ? <option value="">No employees loaded</option> : null}
             </select>
             <input
               className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#f97316]/40"

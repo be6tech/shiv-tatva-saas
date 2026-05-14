@@ -15,7 +15,6 @@ import { motion } from "framer-motion";
 import { CalendarClock, Timer, Activity, RotateCcw } from "lucide-react";
 import { useAuth } from "@/features/auth/useAuth";
 import { apiFetch } from "@/lib/api";
-import { EMPLOYEE_ID_DEFAULT } from "@/lib/employee-auth-constants";
 
 const labels = {
   CHECK_IN: "Check In",
@@ -31,7 +30,7 @@ export default function EmployeeAttendancePage() {
   const [now, setNow] = React.useState(new Date());
   const [employeeName, setEmployeeName] = React.useState("Employee");
   const [department, setDepartment] = React.useState("—");
-  const employeeId = auth.userId ?? EMPLOYEE_ID_DEFAULT;
+  const employeeId = auth.userId ?? "";
 
   React.useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
@@ -70,9 +69,6 @@ export default function EmployeeAttendancePage() {
                 <div className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs text-slate-200/80 ring-1 ring-white/10 bg-white/5">
                   <CalendarClock className="h-3.5 w-3.5 text-[#f97316]" />
                   {attendance.dateKey} • Live Attendance
-                </div>
-                <div className="mt-2 text-xs text-slate-300/70">
-                  Data source: <span className="text-slate-200/85">{attendance.source}</span>
                 </div>
                 {attendance.shift ? (
                   <div className="mt-2 text-xs text-slate-300/70">

@@ -183,10 +183,13 @@ export function DashboardShell({
   const router = useRouter();
   const pathname = usePathname();
   const auth = useAuth();
+  const [employeeName, setEmployeeName] = React.useState<string | null>(null);
+  const adminLabel =
+    role === "admin" && auth.userId?.includes("@") ? auth.userId : role === "admin" ? "Admin" : null;
   const homeHref = role === "admin" ? "/admin" : "/employee";
   const showBackToDashboard = pathname !== homeHref;
   const showAdminTopBar = role === "admin" && (showBackToDashboard || pathname === homeHref);
-  const showEmployeeTopBar = role === "employee" && showBackToDashboard;
+  const showEmployeeTopBar = role === "employee" && (showBackToDashboard || pathname === homeHref);
   const showTopBackBar = showAdminTopBar || showEmployeeTopBar;
 
   React.useEffect(() => {
@@ -199,6 +202,16 @@ export function DashboardShell({
       router.replace(auth.role === "admin" ? "/admin" : "/employee");
     }
   }, [auth.hydrated, auth.token, auth.role, role, router]);
+
+  React.useEffect(() => {
+    if (!auth.hydrated || !auth.token || role !== "employee") {
+      setEmployeeName(null);
+      return;
+    }
+    apiFetch<{ employee?: { name?: string } | null }>("/employee/me", { token: auth.token })
+      .then((r) => setEmployeeName(r.employee?.name?.trim() || null))
+      .catch(() => setEmployeeName(null));
+  }, [auth.hydrated, auth.token, role]);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -238,20 +251,43 @@ export function DashboardShell({
                       </Link>
                     </div>
                   ) : (
-                    <Link
-                      href={homeHref}
-                      className="flex min-h-11 w-full max-w-full items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-[#F57C00] sm:inline-flex sm:w-auto"
-                    >
-                      <ArrowLeft className="h-4 w-4 shrink-0 text-[#F57C00]" aria-hidden />
-                      <span>Back to dashboard</span>
-                    </Link>
+                    <div className="flex min-h-11 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2">
+                      {showBackToDashboard ? (
+                        <Link
+                          href={homeHref}
+                          className="inline-flex max-w-full items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-[#F57C00]"
+                        >
+                          <ArrowLeft className="h-4 w-4 shrink-0 text-[#F57C00]" aria-hidden />
+                          <span>Back to dashboard</span>
+                        </Link>
+                      ) : null}
+                      <Link
+                        href="/login/employee"
+                        className={cn(
+                          "inline-flex items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-[#F57C00] sm:shrink-0",
+                          showBackToDashboard && "sm:ml-auto"
+                        )}
+                      >
+                        <ArrowLeft className="h-4 w-4 shrink-0 text-[#F57C00]" aria-hidden />
+                        <span>Back to login page</span>
+                      </Link>
+                      <Link
+                        href="/"
+                        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-[#F57C00]"
+                      >
+                        <ArrowLeft className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
+                        <span>Back to website</span>
+                      </Link>
+                    </div>
                   )}
                 </div>
               </div>
             ) : null}
             <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
               <div className="min-w-0 flex-1">
-                <div className="text-sm text-muted-foreground">{role === "admin" ? "Admin" : "Employee"}</div>
+                <div className="text-sm text-muted-foreground">
+                  {role === "admin" ? adminLabel ?? "Admin" : employeeName ?? "Employee"}
+                </div>
                 <div className="text-lg font-semibold text-foreground truncate">{title}</div>
               </div>
               <div className="flex shrink-0 items-center gap-2">

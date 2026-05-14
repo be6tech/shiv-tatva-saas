@@ -57,6 +57,25 @@ export async function signAdminToken(email: string): Promise<string> {
     .sign(jwtSecretBytes());
 }
 
+export async function verifyAdminBearer(
+  authorization: string | null
+): Promise<{ email: string } | null> {
+  if (!authorization?.startsWith("Bearer ")) return null;
+  const token = authorization.slice("Bearer ".length).trim();
+  if (!token) return null;
+  try {
+    const { jwtVerify } = await import("jose");
+    const { payload } = await jwtVerify(token, jwtSecretBytes(), {
+      issuer: process.env.JWT_ISSUER || "shivtatva",
+      audience: process.env.JWT_AUDIENCE || "shivtatva-app",
+    });
+    if (payload.role !== "admin" || typeof payload.sub !== "string") return null;
+    return { email: payload.sub };
+  } catch {
+    return null;
+  }
+}
+
 export function newResetToken(): string {
   return randomBytes(32).toString("hex");
 }

@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { marketingSurface } from "@/components/marketing/marketing-styles";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import Link from "next/link";
-import { CalendarClock, Bell, ClipboardList, Wallet, Sparkles } from "lucide-react";
+import { CalendarClock, Bell, ClipboardList, Wallet } from "lucide-react";
 import * as React from "react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/features/auth/useAuth";
@@ -15,9 +15,16 @@ type MePayload = {
   org?: string;
 };
 
+type EmployeeProfile = {
+  id?: string;
+  name?: string;
+  department?: string;
+};
+
 export default function EmployeeDashboard() {
   const auth = useAuth();
   const [me, setMe] = React.useState<MePayload | null>(null);
+  const [employee, setEmployee] = React.useState<EmployeeProfile | null>(null);
   const [pendingTasks, setPendingTasks] = React.useState(0);
   const [pendingLeaves, setPendingLeaves] = React.useState(0);
   const [unreadNotifs, setUnreadNotifs] = React.useState(0);
@@ -25,9 +32,15 @@ export default function EmployeeDashboard() {
 
   React.useEffect(() => {
     if (!auth.hydrated || !auth.token) return;
-    apiFetch<{ me: MePayload }>("/employee/me", { token: auth.token })
-      .then((r) => setMe(r.me))
-      .catch(() => setMe(null));
+    apiFetch<{ me: MePayload; employee?: EmployeeProfile | null }>("/employee/me", { token: auth.token })
+      .then((r) => {
+        setMe(r.me);
+        setEmployee(r.employee ?? null);
+      })
+      .catch(() => {
+        setMe(null);
+        setEmployee(null);
+      });
   }, [auth.hydrated, auth.token]);
 
   React.useEffect(() => {
@@ -65,20 +78,27 @@ export default function EmployeeDashboard() {
           <div className={cn(marketingSurface, "p-6")}>
             <div className="flex items-center justify-between gap-4">
               <div>
-                <div className="text-sm text-slate-300/80">Welcome back</div>
+                <div className="text-sm text-slate-300/80">
+                  Welcome back{employee?.name ? `, ${employee.name}` : ""}
+                </div>
                 <div className="mt-1 text-xl font-semibold">Employee Self-Service</div>
                 <p className="mt-2 text-sm text-slate-300/85">
                   Track attendance, request leaves, view payslips, manage tasks, and
                   get AI-powered insights.
                 </p>
-                <div className="mt-3 text-xs text-slate-300/70">
-                  Session: {me?.sub ? me.sub : auth.userId ?? "—"} • Role:{" "}
-                  {me?.role ?? auth.role ?? "—"}
-                </div>
-              </div>
-              <div className="hidden sm:flex items-center gap-2 rounded-2xl px-4 py-3 bg-white/5 ring-1 ring-white/10">
-                <Sparkles className="h-4 w-4 text-[#f97316]" />
-                <div className="text-xs text-slate-200/80">AI Nudges Enabled</div>
+                {employee?.name || me?.sub || auth.userId ? (
+                  <div className="mt-3 text-xs text-slate-300/70">
+                    {employee?.name ? <span className="text-slate-200/85">{employee.name}</span> : null}
+                    {employee?.name && (me?.sub ?? auth.userId) ? " • " : null}
+                    {me?.sub ?? auth.userId ?? null}
+                    {employee?.department ? (
+                      <>
+                        {" • "}
+                        <span className="text-slate-200/85">{employee.department}</span>
+                      </>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
