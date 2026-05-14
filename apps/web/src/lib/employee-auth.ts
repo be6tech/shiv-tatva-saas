@@ -1,0 +1,163 @@
+import "server-only";
+import { SignJWT } from "jose";
+import {
+  getSupabaseAdminConfig,
+  hashPassword,
+  newResetToken,
+  verifyPassword,
+  jwtSecretBytes,
+} from "@/lib/admin-auth";
+import {
+  EMPLOYEE_EMAIL_DEFAULT,
+  EMPLOYEE_ID_DEFAULT,
+  EMPLOYEE_SEED_PASSWORD_HASH,
+} from "@/lib/employee-auth-constants";
+
+export {
+  EMPLOYEE_EMAIL_DEFAULT,
+  EMPLOYEE_ID_DEFAULT,
+  EMPLOYEE_SEED_PASSWORD_HASH,
+} from "@/lib/employee-auth-constants";
+
+export type EmployeeRow = {
+  id: string;
+  employee_id: string;
+  email: string;
+  password_hash: string;
+  reset_token: string | null;
+  reset_token_expires_at: string | null;
+};
+
+const employeeSelect =
+  "id,employee_id,email,password_hash,reset_token,reset_token_expires_at";
+
+function normalizeIdentifier(raw: string): string {
+  return raw.trim();
+}
+
+function isEmail(value: string): boolean {
+  return value.includes("@");
+}
+
+async function supabaseGet(path: string): Promise<Response> {
+  const cfg = getSupabaseAdminConfig();
+  if (!cfg) throw new Error("not_configured");
+  try {
+    return await fetch(`${cfg.base}${path}`, {
+      headers: {
+        apikey: cfg.key,
+        Authorization: `Bearer ${cfg.key}`,
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(12_000),
+    });
+  } catch {
+    throw new Error("supabase_unreachable");
+  }
+}
+
+export async function fetchEmployeeByIdentifier(
+  identifier: string
+): Promise<EmployeeRow | null> {
+  const cfg = getSupabaseAdminConfig();
+  if (!cfg) return null;
+
+  const value = normalizeIdentifier(identifier);
+  const url = isEmail(value)
+    ? `/rest/v1/employee_users?email=eq.${encodeURIComponent(value.toLowerCase())}&select=${employeeSelect}&limit=1`
+    : `/rest/v1/employee_users?employee_id=eq.${encodeURIComponent(value)}&select=${employeeSelect}&limit=1`;
+
+  const res = await supabaseGet(url);
+  if (!res.ok) return null;
+  const rows = (await res.json()) as EmployeeRow[];
+  return rows[0] ?? null;
+}
+
+export async function fetchEmployeeByResetToken(token: string): Promise<EmployeeRow | null> {
+  const cfg = getSupabaseAdminConfig();
+  if (!cfg) return null;
+  const url = `/rest/v1/employee_users?reset_token=eq.${encodeURIComponent(token)}&select=${employeeSelect}&limit=1`;
+  const res = await supabaseGet(url);
+  if (!res.ok) return null;
+  const rows = (await res.json()) as EmployeeRow[];
+  return rows[0] ?? null;
+}
+
+export async function patchEmployee(id: string, body: Record<string, unknown>): Promise<boolean> {
+  const cfg = getSupabaseAdminConfig();
+  if (!cfg) return false;
+  const res = await fetch(`${cfg.base}/rest/v1/employee_users?id=eq.${id}`, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: cfg.key,
+      Authorization: `Bearer ${cfg.key}`,
+      Prefer: "return=minimal",
+    },
+    body: JSON.stringify({ ...body, updated_at: new Date().toISOString() }),
+  });
+  return res.ok;
+}
+
+export async function signEmployeeToken(employeeId: string): Promise<string> {
+  return new SignJWT({
+    sub: employeeId,
+    role: "employee",
+    org: "Shiv Tatva Solutions Private Limited",
+  })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("8h")
+    .setIssuer(process.env.JWT_ISSUER || "shivtatva")
+    .setAudience(process.env.JWT_AUDIENCE || "shivtatva-app")
+    .sign(jwtSecretBytes());
+}
+
+export function verifySeedEmployeeLogin(identifier: string, password: string): boolean {
+  const value = normalizeIdentifier(identifier);
+  const idMatch =
+    value.toUpperCase() === EMPLOYEE_ID_DEFAULT.toUpperCase() ||
+    value.toLowerCase() === EMPLOYEE_EMAIL_DEFAULT.toLowerCase();
+  return idMatch && verifyPassword(password, EMPLOYEE_SEED_PASSWORD_HASH);
+}
+
+export async function authenticateEmployee(
+  identifier: string,
+  password: string
+): Promise<
+  { employeeId: string } | { error: "invalid_credentials" | "service_unavailable" | "not_configured" }
+> {
+  const value = normalizeIdentifier(identifier);
+  if (!value) return { error: "invalid_credentials" };
+
+  const cfg = getSupabaseAdminConfig();
+  if (!cfg) {
+    if (process.env.NODE_ENV === "development" && verifySeedEmployeeLogin(value, password)) {
+      return { employeeId: EMPLOYEE_ID_DEFAULT };
+    }
+    return { error: "not_configured" };
+  }
+
+  try {
+    const employee = await fetchEmployeeByIdentifier(value);
+    if (employee && verifyPassword(password, employee.password_hash)) {
+      return { employeeId: employee.employee_id };
+    }
+  } catch (e) {
+    if (process.env.NODE_ENV === "development" && verifySeedEmployeeLogin(value, password)) {
+      return { employeeId: EMPLOYEE_ID_DEFAULT };
+    }
+    if (e instanceof Error && e.message === "not_configured") {
+      return { error: "not_configured" };
+    }
+    return { error: "service_unavailable" };
+  }
+
+  if (process.env.NODE_ENV === "development" && verifySeedEmployeeLogin(value, password)) {
+    return { employeeId: EMPLOYEE_ID_DEFAULT };
+  }
+
+  return { error: "invalid_credentials" };
+}
+
+export { hashPassword, newResetToken };

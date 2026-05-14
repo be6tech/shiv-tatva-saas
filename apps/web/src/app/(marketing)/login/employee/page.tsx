@@ -5,42 +5,55 @@ import Image from "next/image";
 import { Sparkles, Lock } from "lucide-react";
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { login as apiLogin, LoginNetworkError } from "@/lib/api";
 import { useAuth } from "@/features/auth/useAuth";
 import { LoginDashboardContinue } from "@/components/auth/login-dashboard-continue";
 import { LoginErrorAlert } from "@/components/auth/login-error-alert";
 import { marketingPageRoot, marketingSurface, marketingInput } from "@/components/marketing/marketing-styles";
 import { cn } from "@/lib/utils";
+import { EMPLOYEE_ID_DEFAULT } from "@/lib/employee-auth-constants";
 
 export default function EmployeeLoginPage() {
   const router = useRouter();
   const auth = useAuth();
-  const [identifier, setIdentifier] = React.useState("ST-EMP-001");
-  const [password, setPassword] = React.useState("demo");
+  const [identifier, setIdentifier] = React.useState(EMPLOYEE_ID_DEFAULT);
+  const [password, setPassword] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
-  const [networkHint, setNetworkHint] = React.useState(false);
   const [loading, setLoading] = React.useState(false);
 
   const onSubmit = async () => {
     setError(null);
-    setNetworkHint(false);
     setLoading(true);
     try {
-      const res = await apiLogin({
-        type: "employee",
-        identifier,
-        password,
+      const res = await fetch("/api/auth/employee/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier, password }),
       });
-      auth.login({ token: res.token, role: res.user.role, userId: res.user.id });
-      router.push("/employee");
-    } catch (e) {
-      if (e instanceof LoginNetworkError) {
-        setError(e.message);
-        setNetworkHint(true);
-      } else {
-        setError(e instanceof Error ? e.message : "Login failed");
-        setNetworkHint(false);
+      const data = (await res.json().catch(() => ({}))) as {
+        token?: string;
+        user?: { id: string; role: "employee" };
+        error?: string;
+      };
+      if (!res.ok) {
+        setError(
+          data.error === "invalid_credentials"
+            ? "Invalid employee ID/email or password."
+            : data.error === "not_configured"
+              ? "Sign-in is not configured. Set SUPABASE_SERVICE_ROLE_KEY and run supabase/employee_users.sql."
+              : data.error === "service_unavailable"
+                ? "Can't reach Supabase. In local dev use ST-EMP-001 / demo."
+                : "Login failed. Please try again."
+        );
+        return;
       }
+      if (!data.token || !data.user) {
+        setError("Login failed. Please try again.");
+        return;
+      }
+      auth.login({ token: data.token, role: data.user.role, userId: data.user.id });
+      router.push("/employee");
+    } catch {
+      setError("Can't reach the sign-in service. Try again in a moment.");
     } finally {
       setLoading(false);
     }
@@ -55,21 +68,6 @@ export default function EmployeeLoginPage() {
           backgroundSize: "24px 24px",
         }}
       />
-      <div
-        className="pointer-events-none absolute inset-0 hidden opacity-[0.35] dark:block"
-        style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, rgba(148,163,184,0.12) 1px, transparent 0)`,
-          backgroundSize: "24px 24px",
-        }}
-      />
-      <div
-        className="pointer-events-none absolute -top-24 left-1/2 h-[420px] w-[420px] -translate-x-1/2 rounded-full blur-3xl opacity-40"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 30%, rgba(249,115,22,.35), transparent 55%), radial-gradient(circle at 70% 40%, rgba(59,130,246,.2), transparent 60%)",
-        }}
-      />
-
       <div
         className={cn(
           marketingSurface,
@@ -112,17 +110,28 @@ export default function EmployeeLoginPage() {
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") void onSubmit();
+            }}
           />
+          <div className="flex justify-end">
+            <Link
+              href="/login/employee/forgot"
+              className="text-xs font-medium text-[#ea580c] hover:underline dark:text-[#f97316]"
+            >
+              Forgot password?
+            </Link>
+          </div>
           <button
             type="button"
             onClick={onSubmit}
             disabled={loading}
-            className="mt-2 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ea580c] to-[#fb923c] px-4 py-3 text-sm font-semibold text-white dark:from-[#f97316] dark:to-amber-400"
+            className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ea580c] to-[#fb923c] px-4 py-3 text-sm font-semibold text-white dark:from-[#f97316] dark:to-amber-400"
           >
             <Lock className="h-4 w-4" />
             {loading ? "Signing in..." : "Login"}
           </button>
-          <LoginErrorAlert message={error} showNetworkHint={networkHint} />
+          <LoginErrorAlert message={error} showNetworkHint={false} />
           <LoginDashboardContinue portal="employee" />
           <Link
             className="text-sm font-medium text-slate-600 underline-offset-4 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-white"
@@ -135,4 +144,3 @@ export default function EmployeeLoginPage() {
     </div>
   );
 }
-
