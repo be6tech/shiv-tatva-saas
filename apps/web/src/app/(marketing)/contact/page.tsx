@@ -295,7 +295,7 @@ export default function ContactPage() {
               )}
             >
               <iframe
-                title="Kondapur, Hyderabad — map preview"
+                title="Cohort Coworking Space, Kondapur — map preview"
                 src={OSM_OFFICE_MAP_EMBED_SRC}
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"

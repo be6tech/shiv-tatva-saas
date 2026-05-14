@@ -344,7 +344,7 @@ let orgSettings = {
   companyName: "Shiv Tatva Solutions Private Limited",
   supportEmail: "support@shivtatva.com",
   supportPhone: "+91 90000 00000",
-  locationText: "India • Cloud-native delivery",
+  locationText: "Cohort Coworking Space, 1st Floor, Kondapur, Hyderabad",
   workHoursPerDay: 8,
   lateThresholdMinutes: 10,
   anomalySpikeRatio: 0.4,
