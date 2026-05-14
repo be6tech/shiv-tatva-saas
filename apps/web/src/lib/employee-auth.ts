@@ -101,6 +101,51 @@ export async function patchEmployee(id: string, body: Record<string, unknown>): 
   return res.ok;
 }
 
+/** Create DB row from roster when missing (production + after employee_users.sql). */
+export async function ensureEmployeeRow(
+  employeeId: string,
+  email: string
+): Promise<EmployeeRow | null> {
+  const existing = await fetchEmployeeByIdentifier(employeeId);
+  if (existing) return existing;
+
+  const cfg = getSupabaseAdminConfig();
+  if (!cfg) return null;
+
+  const res = await fetch(`${cfg.base}/rest/v1/employee_users`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: cfg.key,
+      Authorization: `Bearer ${cfg.key}`,
+      Prefer: "return=representation",
+    },
+    body: JSON.stringify({
+      employee_id: employeeId,
+      email: email.toLowerCase(),
+      password_hash: EMPLOYEE_SEED_PASSWORD_HASH,
+    }),
+  });
+  if (!res.ok) return null;
+  const rows = (await res.json()) as EmployeeRow[];
+  return rows[0] ?? null;
+}
+
+export async function saveEmployeeResetOtp(
+  employeeId: string,
+  email: string,
+  otp: string,
+  expires: string
+): Promise<EmployeeRow | null> {
+  const row = await ensureEmployeeRow(employeeId, email);
+  if (!row) return null;
+  const ok = await patchEmployee(row.id, {
+    reset_token: otp,
+    reset_token_expires_at: expires,
+  });
+  return ok ? { ...row, reset_token: otp, reset_token_expires_at: expires } : null;
+}
+
 export async function signEmployeeToken(employeeId: string): Promise<string> {
   return new SignJWT({
     sub: employeeId,

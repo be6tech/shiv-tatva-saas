@@ -60,7 +60,14 @@ export async function POST(req: Request) {
         resetPath: `/login/admin/reset?email=${encodeURIComponent(email)}`,
       });
     }
-    return NextResponse.json({ ok: false, error: "email_not_configured" }, { status: 503 });
+    return NextResponse.json(
+      {
+        ok: false,
+        error: "email_not_configured",
+        hint: "Add RESEND_API_KEY and PASSWORD_RESET_FROM_EMAIL on Vercel, then redeploy.",
+      },
+      { status: 503 }
+    );
   }
 
   const sent = await sendPasswordResetOtpEmail({
@@ -69,7 +76,10 @@ export async function POST(req: Request) {
     portalLabel: "Admin login",
   });
   if (!sent.ok) {
-    return NextResponse.json({ ok: false, error: sent.error }, { status: 502 });
+    return NextResponse.json(
+      { ok: false, error: "email_send_failed", detail: sent.error },
+      { status: 502 }
+    );
   }
 
   return NextResponse.json({

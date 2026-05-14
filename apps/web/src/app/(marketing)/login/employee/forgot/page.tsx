@@ -38,20 +38,21 @@ export default function EmployeeForgotPasswordPage() {
         detail?: string;
       };
       if (!res.ok) {
+        const hint = data.hint ? ` ${data.hint}` : "";
         setError(
           data.error === "not_configured"
-            ? "Password reset is not configured. Set SUPABASE_SERVICE_ROLE_KEY on the server."
+            ? `Server not configured.${hint || " Set SUPABASE_SERVICE_ROLE_KEY on Vercel."}`
             : data.error === "email_not_configured"
-              ? "Email is not configured. Add RESEND_API_KEY on Vercel (or .env.local for dev)."
+              ? `Email not configured.${hint || " Add RESEND_API_KEY on Vercel and redeploy."}`
               : data.error === "email_send_failed"
-                ? "Could not send email. Check RESEND_API_KEY and PASSWORD_RESET_FROM_EMAIL."
+                ? `Could not send email.${hint || ""}${data.detail ? ` (${data.detail})` : ""}`
                 : data.error === "service_unavailable"
-                  ? "Can't reach Supabase. Try again, or use dev OTP if shown."
+                  ? "Can't reach Supabase. Try again in a moment."
                   : data.error === "save_failed"
                     ? data.hint ?? "Could not save OTP. Run supabase/employee_users.sql in Supabase."
                     : data.detail
                       ? `Request failed: ${data.detail}`
-                      : "Request failed. Try again."
+                      : `Request failed.${hint}`
         );
         return;
       }
