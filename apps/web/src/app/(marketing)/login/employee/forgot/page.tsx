@@ -44,8 +44,11 @@ export default function EmployeeForgotPasswordPage() {
             ? `Server not configured.${hint || " Set SUPABASE_SERVICE_ROLE_KEY on Vercel."}`
             : data.error === "email_not_configured"
               ? `Email not configured.${hint || " Add RESEND_API_KEY on Vercel and redeploy."}`
-              : data.error === "email_send_failed"
-                ? `Could not send email.${hint || ""}${data.detail ? ` (${data.detail})` : ""}`
+              : data.error === "email_send_failed" || data.error === "resend_domain_required"
+                ? data.error === "resend_domain_required"
+                  ? data.detail ??
+                    "Resend requires a verified domain to email employees. Set RESEND_TEST_INBOX=ganeshbandaru800@gmail.com on Vercel for testing."
+                  : `Could not send email.${hint || ""}${data.detail ? ` (${data.detail})` : ""}`
                 : data.error === "service_unavailable"
                   ? "Can't reach Supabase. Try again in a moment."
                   : data.error === "save_failed"

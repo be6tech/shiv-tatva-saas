@@ -77,7 +77,15 @@ export async function POST(req: Request) {
   });
   if (!sent.ok) {
     return NextResponse.json(
-      { ok: false, error: "email_send_failed", detail: sent.error },
+      {
+        ok: false,
+        error: sent.code ?? "email_send_failed",
+        detail: sent.error,
+        hint:
+          sent.code === "resend_domain_required"
+            ? "Verify your domain at resend.com/domains, or set RESEND_TEST_INBOX to your Resend signup email for testing."
+            : undefined,
+      },
       { status: 502 }
     );
   }
@@ -85,5 +93,8 @@ export async function POST(req: Request) {
   return NextResponse.json({
     ...generic,
     resetPath: `/login/admin/reset?email=${encodeURIComponent(email)}`,
+    message: sent.testInbox
+      ? `OTP sent to ${sent.sentTo} (test inbox). Code is for ${admin.email}.`
+      : generic.message,
   });
 }

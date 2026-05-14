@@ -113,13 +113,22 @@ export async function POST(req: Request) {
     return NextResponse.json(
       {
         ok: false,
-        error: "email_send_failed",
+        error: sent.code ?? "email_send_failed",
         detail: sent.error,
-        hint: "Verify RESEND_API_KEY and that PASSWORD_RESET_FROM_EMAIL is allowed by Resend.",
+        hint:
+          sent.code === "resend_domain_required"
+            ? "Verify be6technologies.in (or your domain) at resend.com/domains, or set RESEND_TEST_INBOX=ganeshbandaru800@gmail.com on Vercel for testing."
+            : "Verify RESEND_API_KEY and PASSWORD_RESET_FROM_EMAIL.",
       },
       { status: 502 }
     );
   }
 
-  return NextResponse.json({ ...generic, resetPath });
+  return NextResponse.json({
+    ...generic,
+    resetPath,
+    message: sent.testInbox
+      ? `OTP sent to ${sent.sentTo} (test inbox). Code is for ${roster.email}.`
+      : generic.message,
+  });
 }
