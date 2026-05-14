@@ -10,12 +10,14 @@ import {
 import {
   EMPLOYEE_EMAIL_DEFAULT,
   EMPLOYEE_ID_DEFAULT,
+  EMPLOYEE_ROSTER,
   EMPLOYEE_SEED_PASSWORD_HASH,
 } from "@/lib/employee-auth-constants";
 
 export {
   EMPLOYEE_EMAIL_DEFAULT,
   EMPLOYEE_ID_DEFAULT,
+  EMPLOYEE_ROSTER,
   EMPLOYEE_SEED_PASSWORD_HASH,
 } from "@/lib/employee-auth-constants";
 
@@ -115,10 +117,22 @@ export async function signEmployeeToken(employeeId: string): Promise<string> {
 
 export function verifySeedEmployeeLogin(identifier: string, password: string): boolean {
   const value = normalizeIdentifier(identifier);
-  const idMatch =
-    value.toUpperCase() === EMPLOYEE_ID_DEFAULT.toUpperCase() ||
-    value.toLowerCase() === EMPLOYEE_EMAIL_DEFAULT.toLowerCase();
-  return idMatch && verifyPassword(password, EMPLOYEE_SEED_PASSWORD_HASH);
+  const match = EMPLOYEE_ROSTER.find(
+    (e) =>
+      e.id.toUpperCase() === value.toUpperCase() ||
+      e.email.toLowerCase() === value.toLowerCase()
+  );
+  return !!match && verifyPassword(password, EMPLOYEE_SEED_PASSWORD_HASH);
+}
+
+export function seedEmployeeIdForIdentifier(identifier: string): string | null {
+  const value = normalizeIdentifier(identifier);
+  const match = EMPLOYEE_ROSTER.find(
+    (e) =>
+      e.id.toUpperCase() === value.toUpperCase() ||
+      e.email.toLowerCase() === value.toLowerCase()
+  );
+  return match?.id ?? null;
 }
 
 export async function authenticateEmployee(
@@ -132,8 +146,9 @@ export async function authenticateEmployee(
 
   const cfg = getSupabaseAdminConfig();
   if (!cfg) {
-    if (process.env.NODE_ENV === "development" && verifySeedEmployeeLogin(value, password)) {
-      return { employeeId: EMPLOYEE_ID_DEFAULT };
+    const seedId = seedEmployeeIdForIdentifier(value);
+    if (process.env.NODE_ENV === "development" && seedId && verifySeedEmployeeLogin(value, password)) {
+      return { employeeId: seedId };
     }
     return { error: "not_configured" };
   }
@@ -144,8 +159,9 @@ export async function authenticateEmployee(
       return { employeeId: employee.employee_id };
     }
   } catch (e) {
-    if (process.env.NODE_ENV === "development" && verifySeedEmployeeLogin(value, password)) {
-      return { employeeId: EMPLOYEE_ID_DEFAULT };
+    const seedId = seedEmployeeIdForIdentifier(value);
+    if (process.env.NODE_ENV === "development" && seedId && verifySeedEmployeeLogin(value, password)) {
+      return { employeeId: seedId };
     }
     if (e instanceof Error && e.message === "not_configured") {
       return { error: "not_configured" };
@@ -154,7 +170,8 @@ export async function authenticateEmployee(
   }
 
   if (process.env.NODE_ENV === "development" && verifySeedEmployeeLogin(value, password)) {
-    return { employeeId: EMPLOYEE_ID_DEFAULT };
+    const seedId = seedEmployeeIdForIdentifier(value);
+    if (seedId) return { employeeId: seedId };
   }
 
   return { error: "invalid_credentials" };

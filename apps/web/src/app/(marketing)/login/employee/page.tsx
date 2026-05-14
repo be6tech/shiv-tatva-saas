@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Sparkles, Lock } from "lucide-react";
+import { Sparkles, Lock, ArrowLeft } from "lucide-react";
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/features/auth/useAuth";
@@ -41,7 +41,7 @@ export default function EmployeeLoginPage() {
             : data.error === "not_configured"
               ? "Sign-in is not configured. Set SUPABASE_SERVICE_ROLE_KEY and run supabase/employee_users.sql."
               : data.error === "service_unavailable"
-                ? "Can't reach Supabase. In local dev use ST-EMP-001 / demo."
+                ? "Can't reach Supabase. In local dev use your Employee ID / email with password demo."
                 : "Login failed. Please try again."
         );
         return;
@@ -134,10 +134,11 @@ export default function EmployeeLoginPage() {
           <LoginErrorAlert message={error} showNetworkHint={false} />
           <LoginDashboardContinue portal="employee" />
           <Link
-            className="text-sm font-medium text-slate-600 underline-offset-4 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-white"
+            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 underline-offset-4 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-white"
             href="/"
           >
-            ← Back to website
+            <ArrowLeft className="h-4 w-4" />
+            Back to website
           </Link>
         </div>
       </div>

@@ -9,6 +9,7 @@ import morgan from "morgan";
 import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { requireAuth } from "./auth/jwt.js";
+import { employeesSeed, employeeShiftSeed } from "./employees-seed.js";
 
 const app = express();
 app.use(helmet());
@@ -234,7 +235,9 @@ app.put("/admin/employees/:id", requireAuth({ roles: ["admin"] }), (req, res) =>
 });
 
 app.get("/employee/me", requireAuth({ roles: ["employee", "admin"] }), (req, res) => {
-  res.json({ me: req.user });
+  const employeeId = String(req.user?.sub || "");
+  const employee = findEmployee(employeeId);
+  res.json({ me: req.user, employee });
 });
 
 // ---------------------------------------------------------------------------
@@ -290,22 +293,20 @@ function scheduleSave() {
   }, 250);
 }
 
-let employees = [
-  {
-    id: "ST-EMP-001",
-    name: "Demo Employee",
-    department: "Engineering",
-    designation: "Frontend Developer",
-    status: "Active",
-    email: "demo.employee@shivtatva.com",
-    phone: "+91 90000 00000",
-    location: "India",
-    linkedin: "https://linkedin.com",
-    joinedAt: "2025-01-15",
-    skills: ["React", "Next.js", "TypeScript", "Tailwind"],
-    experienceYears: 3,
-  },
-];
+function mergeEmployeesFromDb(persisted) {
+  if (!Array.isArray(persisted) || persisted.length === 0) return [...employeesSeed];
+  const onlyDemo =
+    persisted.length === 1 && String(persisted[0]?.id ?? "") === "ST-EMP-001";
+  if (onlyDemo) return [...employeesSeed];
+  const ids = new Set(persisted.map((e) => e.id));
+  const merged = [...persisted];
+  for (const seed of employeesSeed) {
+    if (!ids.has(seed.id)) merged.push(seed);
+  }
+  return merged;
+}
+
+let employees = [...employeesSeed];
 
 const attendanceKey = (dateKey, employeeId) => `${dateKey}:${employeeId}`;
 /** @type {Map<string, any>} */
@@ -318,7 +319,7 @@ const shiftTypes = [
   { id: "flex", name: "Flexible Shift", start: "Flexible", end: "Flexible" },
 ];
 /** @type {Map<string, string>} */
-const employeeShift = new Map([["ST-EMP-001", "morning"]]);
+const employeeShift = new Map(Object.entries(employeeShiftSeed));
 
 /** @type {any[]} */
 const leaveRequests = [];
@@ -353,7 +354,7 @@ let orgSettings = {
 // hydrate persisted state
 const db = loadDb();
 if (Array.isArray(db?.employees) && db.employees.length > 0) {
-  employees = db.employees;
+  employees = mergeEmployeesFromDb(db.employees);
 }
 if (db?.attendance && typeof db.attendance === "object") {
   for (const [k, v] of Object.entries(db.attendance)) {

@@ -14,6 +14,8 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { CalendarClock, Timer, Activity, RotateCcw } from "lucide-react";
 import { useAuth } from "@/features/auth/useAuth";
+import { apiFetch } from "@/lib/api";
+import { EMPLOYEE_ID_DEFAULT } from "@/lib/employee-auth-constants";
 
 const labels = {
   CHECK_IN: "Check In",
@@ -27,15 +29,31 @@ const labels = {
 export default function EmployeeAttendancePage() {
   const auth = useAuth();
   const [now, setNow] = React.useState(new Date());
+  const [employeeName, setEmployeeName] = React.useState("Employee");
+  const [department, setDepartment] = React.useState("—");
+  const employeeId = auth.userId ?? EMPLOYEE_ID_DEFAULT;
+
   React.useEffect(() => {
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
 
+  React.useEffect(() => {
+    if (!auth.hydrated || !auth.token) return;
+    apiFetch<{ employee?: { name?: string; department?: string } | null }>("/employee/me", {
+      token: auth.token,
+    })
+      .then((r) => {
+        if (r.employee?.name) setEmployeeName(r.employee.name);
+        if (r.employee?.department) setDepartment(r.employee.department);
+      })
+      .catch(() => {});
+  }, [auth.hydrated, auth.token]);
+
   const attendance = useAttendance({
-    employeeId: "ST-EMP-001",
-    employeeName: "Demo Employee",
-    department: "Engineering",
+    employeeId,
+    employeeName,
+    department,
   });
 
   const events = attendance.day?.events ?? [];
