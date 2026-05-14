@@ -10,8 +10,9 @@ export function requireAuth(options = {}) {
     try {
       const secret = process.env.JWT_SECRET || "dev_secret";
       const payload = jwt.verify(token, secret, {
-        issuer: process.env.JWT_ISSUER || undefined,
-        audience: process.env.JWT_AUDIENCE || undefined,
+        algorithms: ["HS256"],
+        issuer: process.env.JWT_ISSUER || "shivtatva",
+        audience: process.env.JWT_AUDIENCE || "shivtatva-app",
       });
       req.user = payload;
       if (roles?.length) {

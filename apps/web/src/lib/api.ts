@@ -9,6 +9,25 @@ export const LEADS_API_BASE_EXPLICIT = process.env.NEXT_PUBLIC_API_BASE_URL?.tri
 export const API_BASE = LEADS_API_BASE_EXPLICIT || "http://localhost:4000";
 /** Used by marketing forms: POST /public/leads on api-gateway (defaults to localhost:4000 in dev). */
 
+function shouldProxyHrms(path: string): boolean {
+  return (
+    path.startsWith("/admin/") ||
+    path.startsWith("/employee/") ||
+    path.startsWith("/attendance/") ||
+    path.startsWith("/notifications") ||
+    path.startsWith("/ai/")
+  );
+}
+
+function resolveApiUrl(path: string): string {
+  if (path.startsWith("http")) return path;
+  if (typeof window !== "undefined" && shouldProxyHrms(path)) {
+    const clean = path.startsWith("/") ? path.slice(1) : path;
+    return `/api/hrms/${clean}`;
+  }
+  return `${API_BASE}${path}`;
+}
+
 export type LoginResponse = {
   token: string;
   user: { id: string; role: AuthRole };
@@ -40,7 +59,7 @@ export async function apiFetch<T>(
   path: string,
   init: RequestInit & { token?: string | null } = {}
 ): Promise<T> {
-  const url = path.startsWith("http") ? path : `${API_BASE}${path}`;
+  const url = resolveApiUrl(path);
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
   if (init.token) headers.set("Authorization", `Bearer ${init.token}`);
