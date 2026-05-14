@@ -2,7 +2,8 @@ import "server-only";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { SignJWT } from "jose";
 
-export { ADMIN_EMAIL_DEFAULT } from "./admin-auth-constants";
+export { ADMIN_EMAIL_DEFAULT, ADMIN_SEED_PASSWORD_HASH } from "./admin-auth-constants";
+import { ADMIN_EMAIL_DEFAULT, ADMIN_SEED_PASSWORD_HASH } from "./admin-auth-constants";
 
 function normalizeSupabaseProjectUrl(raw: string): string {
   let u = raw.trim().replace(/\/+$/, "");
@@ -37,7 +38,8 @@ export function verifyPassword(password: string, stored: string): boolean {
 }
 
 export function jwtSecretBytes(): Uint8Array {
-  const secret = process.env.JWT_SECRET?.trim() || "shivtatva_dev_jwt_change_in_production";
+  // Match api-gateway default so admin dashboard API calls work in local dev.
+  const secret = process.env.JWT_SECRET?.trim() || "dev_secret";
   return new TextEncoder().encode(secret);
 }
 
@@ -71,16 +73,62 @@ export async function fetchAdminByEmail(email: string): Promise<AdminRow | null>
   const cfg = getSupabaseAdminConfig();
   if (!cfg) return null;
   const url = `${cfg.base}/rest/v1/admin_users?email=eq.${encodeURIComponent(email)}&select=id,email,password_hash,reset_token,reset_token_expires_at&limit=1`;
-  const res = await fetch(url, {
-    headers: {
-      apikey: cfg.key,
-      Authorization: `Bearer ${cfg.key}`,
-    },
-    cache: "no-store",
-  });
+  let res: Response;
+  try {
+    res = await fetch(url, {
+      headers: {
+        apikey: cfg.key,
+        Authorization: `Bearer ${cfg.key}`,
+      },
+      cache: "no-store",
+      signal: AbortSignal.timeout(12_000),
+    });
+  } catch {
+    throw new Error("supabase_unreachable");
+  }
   if (!res.ok) return null;
   const rows = (await res.json()) as AdminRow[];
   return rows[0] ?? null;
+}
+
+export function verifySeedAdminLogin(email: string, password: string): boolean {
+  return (
+    email.trim().toLowerCase() === ADMIN_EMAIL_DEFAULT &&
+    verifyPassword(password, ADMIN_SEED_PASSWORD_HASH)
+  );
+}
+
+export async function authenticateAdmin(
+  email: string,
+  password: string
+): Promise<{ email: string } | { error: "invalid_credentials" | "service_unavailable" | "not_configured" }> {
+  const normalized = email.trim().toLowerCase();
+  const cfg = getSupabaseAdminConfig();
+
+  if (!cfg) {
+    if (process.env.NODE_ENV === "development" && verifySeedAdminLogin(normalized, password)) {
+      return { email: normalized };
+    }
+    return { error: "not_configured" };
+  }
+
+  try {
+    const admin = await fetchAdminByEmail(normalized);
+    if (admin && verifyPassword(password, admin.password_hash)) {
+      return { email: admin.email };
+    }
+  } catch {
+    if (process.env.NODE_ENV === "development" && verifySeedAdminLogin(normalized, password)) {
+      return { email: normalized };
+    }
+    return { error: "service_unavailable" };
+  }
+
+  if (process.env.NODE_ENV === "development" && verifySeedAdminLogin(normalized, password)) {
+    return { email: normalized };
+  }
+
+  return { error: "invalid_credentials" };
 }
 
 export async function fetchAdminByResetToken(token: string): Promise<AdminRow | null> {

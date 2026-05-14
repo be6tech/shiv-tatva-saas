@@ -29,7 +29,7 @@ export default function AdminLoginPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ identifier, password }),
       });
-      const data = (await res.json()) as {
+      const data = (await res.json().catch(() => ({}))) as {
         token?: string;
         user?: { id: string; role: "admin" };
         error?: string;
@@ -40,7 +40,9 @@ export default function AdminLoginPage() {
             ? "Invalid email or password."
             : data.error === "not_configured"
               ? "Sign-in is not configured. Set SUPABASE_SERVICE_ROLE_KEY on the server and run supabase/admin_users.sql."
-              : "Login failed. Please try again."
+              : data.error === "service_unavailable"
+                ? "Can't reach Supabase from the server. Check your network, or use admin@shivtatva.com / @Shivtatva123 in local dev."
+                : "Login failed. Please try again."
         );
         return;
       }
