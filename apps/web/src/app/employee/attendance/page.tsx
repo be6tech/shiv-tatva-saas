@@ -94,7 +94,9 @@ export default function EmployeeAttendancePage() {
                 </div>
                 {attendance.apiError ? (
                   <div className="mt-3 text-xs text-red-200/90">
-                    {attendance.apiError}
+                    {attendance.apiErrorCode === "outside_shift_window"
+                      ? "Check-in is only allowed during your shift window (from 1 hour before start until shift end)."
+                      : attendance.apiError}
                   </div>
                 ) : null}
                 {auth.role === "admin" ? (

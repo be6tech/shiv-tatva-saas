@@ -423,6 +423,34 @@ function parseHmToMinutes(hm) {
   return h * 60 + m;
 }
 
+/** Check-in allowed from 1h before shift start until shift end (same calendar day). */
+function checkInWindowMinutes(shift) {
+  const startMin = parseHmToMinutes(shift?.start);
+  if (startMin == null || shift?.start === "Flexible") return null;
+  const endMin = parseHmToMinutes(shift?.end);
+  const minAllowed = startMin - 60;
+  // Until shift end for day shifts; night shifts (end < start) allow until end + 2h grace.
+  let maxAllowed = startMin + 180;
+  if (endMin != null) {
+    maxAllowed = endMin > startMin ? endMin : endMin + 24 * 60 + 120;
+  }
+  return { minAllowed, maxAllowed };
+}
+
+function isWithinCheckInWindow(shift, now = new Date()) {
+  const window = checkInWindowMinutes(shift);
+  if (!window) return true;
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const { minAllowed, maxAllowed } = window;
+  if (maxAllowed > 24 * 60) {
+    // Night shift spanning midnight: allow if after min or before end+grace on clock.
+    const endMin = parseHmToMinutes(shift.end);
+    const graceEnd = (endMin ?? 0) + 120;
+    return nowMin >= minAllowed || nowMin <= graceEnd;
+  }
+  return nowMin >= minAllowed && nowMin <= maxAllowed;
+}
+
 function computeLateAndOvertime(day, shift) {
   const workHours = Math.max(1, Math.min(24, Number(orgSettings?.workHoursPerDay ?? 8)));
   const workMinutes = workHours * 60;
@@ -540,20 +568,12 @@ app.post(
         shift.start !== "Flexible" &&
         !(req.user?.role === "admin" && override)
       ) {
-        const startMin = parseHmToMinutes(shift.start);
-        if (startMin != null) {
-          const now = new Date();
-          const nowMin = now.getHours() * 60 + now.getMinutes();
-          // Allow check-in from 60 min before shift start to 180 min after.
-          const minAllowed = startMin - 60;
-          const maxAllowed = startMin + 180;
-          if (nowMin < minAllowed || nowMin > maxAllowed) {
-            return res.status(400).json({
-              error: "outside_shift_window",
-              shift,
-              window: { minAllowed, maxAllowed },
-            });
-          }
+        if (!isWithinCheckInWindow(shift)) {
+          return res.status(400).json({
+            error: "outside_shift_window",
+            shift,
+            window: checkInWindowMinutes(shift),
+          });
         }
       }
     }
