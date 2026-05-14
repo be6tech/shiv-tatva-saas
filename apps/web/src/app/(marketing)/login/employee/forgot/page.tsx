@@ -34,22 +34,30 @@ export default function EmployeeForgotPasswordPage() {
         resetPath?: string;
         devOtp?: string;
         error?: string;
+        hint?: string;
+        detail?: string;
       };
       if (!res.ok) {
         setError(
           data.error === "not_configured"
-            ? "Password reset is not configured on the server."
+            ? "Password reset is not configured. Set SUPABASE_SERVICE_ROLE_KEY on the server."
             : data.error === "email_not_configured"
-              ? "Email delivery is not configured. Set RESEND_API_KEY or SMTP on the server."
-              : data.error === "service_unavailable"
-                ? "Can't reach Supabase. Try again later."
-                : "Request failed."
+              ? "Email is not configured. Add RESEND_API_KEY on Vercel (or .env.local for dev)."
+              : data.error === "email_send_failed"
+                ? "Could not send email. Check RESEND_API_KEY and PASSWORD_RESET_FROM_EMAIL."
+                : data.error === "service_unavailable"
+                  ? "Can't reach Supabase. Try again, or use dev OTP if shown."
+                  : data.error === "save_failed"
+                    ? data.hint ?? "Could not save OTP. Run supabase/employee_users.sql in Supabase."
+                    : data.detail
+                      ? `Request failed: ${data.detail}`
+                      : "Request failed. Try again."
         );
         return;
       }
       setMessage(data.message ?? "If that employee account exists, a 6-digit code has been sent to your email.");
       if (data.devOtp) setDevOtp(data.devOtp);
-      if (data.resetPath) {
+      if (data.resetPath && !data.devOtp) {
         setTimeout(() => router.push(data.resetPath!), 1500);
       }
     } catch {

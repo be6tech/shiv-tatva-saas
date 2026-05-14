@@ -24,3 +24,14 @@ export const EMPLOYEE_ROSTER = [
   { id: "BE19990031", email: "lavanyabypureddy61@gmail.com" },
   { id: "BE19990033", email: "dileepkumarg557@gmail.com" },
 ] as const;
+
+export function findRosterEmployee(identifier: string) {
+  const value = identifier.trim();
+  return (
+    EMPLOYEE_ROSTER.find(
+      (e) =>
+        e.id.toUpperCase() === value.toUpperCase() ||
+        e.email.toLowerCase() === value.toLowerCase()
+    ) ?? null
+  );
+}
