@@ -19,10 +19,15 @@ export function signGatewayJwt(sub: string, role: "admin" | "employee"): string 
   );
 }
 
-export function gatewayBaseUrl(): string {
-  return (
-    process.env.API_GATEWAY_URL?.trim() ||
-    process.env.NEXT_PUBLIC_API_BASE_URL?.trim() ||
-    "http://localhost:4000"
-  );
+/** Returns null on Vercel when no public gateway URL is configured (never use localhost). */
+export function gatewayBaseUrl(): string | null {
+  const explicit =
+    process.env.API_GATEWAY_URL?.trim() || process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
+  if (explicit) return explicit.replace(/\/+$/, "");
+  if (process.env.VERCEL) return null;
+  return "http://localhost:4000";
+}
+
+export function useHrmsFallback(): boolean {
+  return gatewayBaseUrl() === null;
 }

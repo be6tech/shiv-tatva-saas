@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { gatewayBaseUrl, signGatewayJwt } from "@/lib/gateway-token";
+import { gatewayBaseUrl, signGatewayJwt, useHrmsFallback } from "@/lib/gateway-token";
+import { hrmsFallbackResponse } from "@/lib/hrms-fallback";
 import { verifySessionBearer } from "@/lib/session-jwt";
 
 type Ctx = { params: Promise<{ path: string[] }> };
@@ -12,8 +13,23 @@ async function proxy(req: NextRequest, pathParts: string[]) {
 
   const path = pathParts.join("/");
   const search = req.nextUrl.search;
+
+  if (useHrmsFallback()) {
+    const fallback = hrmsFallbackResponse(req.method, path, search, session);
+    if (fallback) return fallback;
+    return NextResponse.json(
+      {
+        error: "gateway_not_configured",
+        hint:
+          "Deploy api-gateway (Render: connect repo + render.yaml) and set API_GATEWAY_URL + JWT_SECRET on Vercel (same JWT_SECRET as Render).",
+      },
+      { status: 503 }
+    );
+  }
+
+  const base = gatewayBaseUrl()!;
   const gwToken = signGatewayJwt(session.sub, session.role);
-  const url = `${gatewayBaseUrl()}/${path}${search}`;
+  const url = `${base}/${path}${search}`;
 
   const headers = new Headers();
   headers.set("Authorization", `Bearer ${gwToken}`);
@@ -33,13 +49,20 @@ async function proxy(req: NextRequest, pathParts: string[]) {
   try {
     upstream = await fetch(url, init);
   } catch {
+    const fallback = hrmsFallbackResponse(req.method, path, search, session);
+    if (fallback) return fallback;
     return NextResponse.json(
       {
         error: "gateway_unreachable",
-        hint: "Start api-gateway (npm run dev in services/api-gateway) or set API_GATEWAY_URL / NEXT_PUBLIC_API_BASE_URL.",
+        hint: `Cannot reach ${base}. Check API_GATEWAY_URL on Vercel and that the gateway is running.`,
       },
       { status: 503 }
     );
+  }
+
+  if (!upstream.ok && upstream.status >= 500) {
+    const fallback = hrmsFallbackResponse(req.method, path, search, session);
+    if (fallback) return fallback;
   }
 
   const body = await upstream.text();

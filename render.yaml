@@ -1,0 +1,16 @@
+# Deploy api-gateway (HRMS) — then set API_GATEWAY_URL on Vercel to the Render service URL.
+services:
+  - type: web
+    name: shivtatva-api-gateway
+    runtime: docker
+    rootDir: services/api-gateway
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: PORT
+        value: 4000
