@@ -186,10 +186,6 @@ export async function authenticateEmployee(
 
   const cfg = getSupabaseAdminConfig();
   if (!cfg) {
-    const seedId = seedEmployeeIdForIdentifier(value);
-    if (process.env.NODE_ENV === "development" && seedId && verifySeedEmployeeLogin(value, password)) {
-      return { employeeId: seedId };
-    }
     return { error: "not_configured" };
   }
 
@@ -199,19 +195,10 @@ export async function authenticateEmployee(
       return { employeeId: employee.employee_id };
     }
   } catch (e) {
-    const seedId = seedEmployeeIdForIdentifier(value);
-    if (process.env.NODE_ENV === "development" && seedId && verifySeedEmployeeLogin(value, password)) {
-      return { employeeId: seedId };
-    }
     if (e instanceof Error && e.message === "not_configured") {
       return { error: "not_configured" };
     }
     return { error: "service_unavailable" };
-  }
-
-  if (process.env.NODE_ENV === "development" && verifySeedEmployeeLogin(value, password)) {
-    const seedId = seedEmployeeIdForIdentifier(value);
-    if (seedId) return { employeeId: seedId };
   }
 
   return { error: "invalid_credentials" };

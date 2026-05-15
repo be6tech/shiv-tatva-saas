@@ -9,6 +9,7 @@ import { useAuth } from "@/features/auth/useAuth";
 import { LoginDashboardContinue } from "@/components/auth/login-dashboard-continue";
 import { LoginErrorAlert } from "@/components/auth/login-error-alert";
 import { marketingPageRoot, marketingSurface, marketingInput } from "@/components/marketing/marketing-styles";
+import { loginErrorMessage } from "@/lib/auth-errors";
 import { cn } from "@/lib/utils";
 
 export default function EmployeeLoginPage() {
@@ -26,30 +27,23 @@ export default function EmployeeLoginPage() {
       const res = await fetch("/api/auth/employee/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ identifier, password }),
       });
       const data = (await res.json().catch(() => ({}))) as {
-        token?: string;
+        ok?: boolean;
         user?: { id: string; role: "employee" };
         error?: string;
       };
       if (!res.ok) {
-        setError(
-          data.error === "invalid_credentials"
-            ? "Invalid employee ID/email or password."
-            : data.error === "not_configured"
-              ? "Sign-in is not configured. Set SUPABASE_SERVICE_ROLE_KEY and run supabase/employee_users.sql."
-              : data.error === "service_unavailable"
-                ? "Can't reach the sign-in service. Check your connection or contact your administrator."
-                : "Login failed. Please try again."
-        );
+        setError(loginErrorMessage(data.error, "employee"));
         return;
       }
-      if (!data.token || !data.user) {
+      if (!data.user?.id || data.user.role !== "employee") {
         setError("Login failed. Please try again.");
         return;
       }
-      auth.login({ token: data.token, role: data.user.role, userId: data.user.id });
+      auth.login({ role: data.user.role, userId: data.user.id });
       router.push("/employee");
     } catch {
       setError("Can't reach the sign-in service. Try again in a moment.");

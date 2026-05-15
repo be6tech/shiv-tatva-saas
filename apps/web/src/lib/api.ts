@@ -1,4 +1,5 @@
 import type { AuthRole } from "@/store/slices/authSlice";
+import { isCookieSession } from "@/lib/auth-client";
 
 /**
  * Non-empty when set at **build** time. Deployed sites must set this to your public API gateway origin
@@ -62,9 +63,21 @@ export async function apiFetch<T>(
   const url = resolveApiUrl(path);
   const headers = new Headers(init.headers);
   headers.set("Content-Type", "application/json");
-  if (init.token) headers.set("Authorization", `Bearer ${init.token}`);
+  const cookieSession = isCookieSession(init.token ?? null);
+  if (init.token && !cookieSession) {
+    headers.set("Authorization", `Bearer ${init.token}`);
+  }
 
-  const res = await fetch(url, { ...init, headers, cache: "no-store" });
+  const sameOriginApi =
+    typeof window !== "undefined" &&
+    (url.startsWith("/api/") || url.startsWith(`${window.location.origin}/api/`));
+
+  const res = await fetch(url, {
+    ...init,
+    headers,
+    credentials: sameOriginApi ? "include" : init.credentials,
+    cache: "no-store",
+  });
   if (!res.ok) {
     let data: unknown = null;
     let text = "";

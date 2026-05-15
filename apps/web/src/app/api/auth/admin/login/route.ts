@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { attachSessionCookie } from "@/lib/auth-cookie";
 import { authenticateAdmin, signAdminToken } from "@/lib/admin-auth";
 
 type Body = { identifier?: string; email?: string; password?: string };
@@ -29,11 +30,13 @@ export async function POST(req: Request) {
     }
 
     const token = await signAdminToken(result.email);
-    return NextResponse.json({
-      token,
+    const res = NextResponse.json({
+      ok: true,
       user: { id: result.email, role: "admin" as const },
       email: result.email,
     });
+    attachSessionCookie(res, token);
+    return res;
   } catch {
     return NextResponse.json({ ok: false, error: "server_error" }, { status: 500 });
   }

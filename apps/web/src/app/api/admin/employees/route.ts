@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { verifyAdminBearer } from "@/lib/admin-auth";
+import { verifyAdminRequest } from "@/lib/admin-auth";
 import { ensureEmployeeRow } from "@/lib/employee-auth";
 
 type Body = { employeeId?: string; email?: string };
 
 export async function POST(req: Request) {
-  const admin = await verifyAdminBearer(req.headers.get("authorization"));
+  const admin = await verifyAdminRequest(req);
   if (!admin) {
     return NextResponse.json({ ok: false, error: "unauthorized" }, { status: 401 });
   }

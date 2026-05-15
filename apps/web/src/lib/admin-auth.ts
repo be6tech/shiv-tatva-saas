@@ -1,6 +1,7 @@
 import "server-only";
 import { randomBytes, scryptSync, timingSafeEqual } from "node:crypto";
 import { SignJWT } from "jose";
+import { readSessionTokenFromRequest } from "@/lib/auth-cookie";
 
 export { ADMIN_EMAIL_DEFAULT, ADMIN_SEED_PASSWORD_HASH } from "./admin-auth-constants";
 import { ADMIN_EMAIL_DEFAULT, ADMIN_SEED_PASSWORD_HASH } from "./admin-auth-constants";
@@ -62,7 +63,7 @@ export async function verifyAdminBearer(
 ): Promise<{ email: string } | null> {
   if (!authorization?.startsWith("Bearer ")) return null;
   const token = authorization.slice("Bearer ".length).trim();
-  if (!token) return null;
+  if (!token || token === "cookie") return null;
   try {
     const { jwtVerify } = await import("jose");
     const { payload } = await jwtVerify(token, jwtSecretBytes(), {
@@ -74,6 +75,12 @@ export async function verifyAdminBearer(
   } catch {
     return null;
   }
+}
+
+export async function verifyAdminRequest(req: Request): Promise<{ email: string } | null> {
+  const token = readSessionTokenFromRequest(req);
+  if (!token) return null;
+  return verifyAdminBearer(`Bearer ${token}`);
 }
 
 export function newResetToken(): string {
@@ -125,9 +132,6 @@ export async function authenticateAdmin(
   const cfg = getSupabaseAdminConfig();
 
   if (!cfg) {
-    if (process.env.NODE_ENV === "development" && verifySeedAdminLogin(normalized, password)) {
-      return { email: normalized };
-    }
     return { error: "not_configured" };
   }
 
@@ -137,14 +141,7 @@ export async function authenticateAdmin(
       return { email: admin.email };
     }
   } catch {
-    if (process.env.NODE_ENV === "development" && verifySeedAdminLogin(normalized, password)) {
-      return { email: normalized };
-    }
     return { error: "service_unavailable" };
-  }
-
-  if (process.env.NODE_ENV === "development" && verifySeedAdminLogin(normalized, password)) {
-    return { email: normalized };
   }
 
   return { error: "invalid_credentials" };

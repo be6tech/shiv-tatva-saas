@@ -183,7 +183,7 @@ export function DashboardShell({
 
   React.useEffect(() => {
     if (!auth.hydrated) return;
-    if (auth.token === null) {
+    if (!auth.role || !auth.userId) {
       router.replace(role === "admin" ? "/login/admin" : "/login/employee");
       return;
     }

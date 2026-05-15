@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { attachSessionCookie } from "@/lib/auth-cookie";
 import { authenticateEmployee, signEmployeeToken } from "@/lib/employee-auth";
 
 type Body = { identifier?: string; password?: string };
@@ -26,11 +27,13 @@ export async function POST(req: Request) {
     }
 
     const token = await signEmployeeToken(result.employeeId);
-    return NextResponse.json({
-      token,
+    const res = NextResponse.json({
+      ok: true,
       user: { id: result.employeeId, role: "employee" as const },
       employeeId: result.employeeId,
     });
+    attachSessionCookie(res, token);
+    return res;
   } catch {
     return NextResponse.json({ ok: false, error: "server_error" }, { status: 500 });
   }

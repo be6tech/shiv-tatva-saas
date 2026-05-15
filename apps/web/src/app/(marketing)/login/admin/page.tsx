@@ -9,6 +9,7 @@ import { useAuth } from "@/features/auth/useAuth";
 import { LoginDashboardContinue } from "@/components/auth/login-dashboard-continue";
 import { LoginErrorAlert } from "@/components/auth/login-error-alert";
 import { marketingPageRoot, marketingSurface, marketingInput } from "@/components/marketing/marketing-styles";
+import { loginErrorMessage } from "@/lib/auth-errors";
 import { cn } from "@/lib/utils";
 
 export default function AdminLoginPage() {
@@ -26,30 +27,23 @@ export default function AdminLoginPage() {
       const res = await fetch("/api/auth/admin/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ identifier, password }),
       });
       const data = (await res.json().catch(() => ({}))) as {
-        token?: string;
+        ok?: boolean;
         user?: { id: string; role: "admin" };
         error?: string;
       };
       if (!res.ok) {
-        setError(
-          data.error === "invalid_credentials"
-            ? "Invalid email or password."
-            : data.error === "not_configured"
-              ? "Sign-in is not configured. Set SUPABASE_SERVICE_ROLE_KEY on the server and run supabase/admin_users.sql."
-              : data.error === "service_unavailable"
-                ? "Can't reach Supabase from the server. Check your network, or use admin@shivtatva.com / @Shivtatva123 in local dev."
-                : "Login failed. Please try again."
-        );
+        setError(loginErrorMessage(data.error, "admin"));
         return;
       }
-      if (!data.token || !data.user) {
+      if (!data.user?.id || data.user.role !== "admin") {
         setError("Login failed. Please try again.");
         return;
       }
-      auth.login({ token: data.token, role: data.user.role, userId: data.user.id });
+      auth.login({ role: data.user.role, userId: data.user.id });
       router.push("/admin");
     } catch {
       setError("Can't reach the sign-in service. Try again in a moment.");

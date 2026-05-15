@@ -15,7 +15,7 @@ export function LoginDashboardContinue({ portal }: { portal: AuthRole }) {
 
   if (!auth.hydrated) return null;
 
-  if (!auth.token) return null;
+  if (!auth.role) return null;
 
   if (auth.role === portal) {
     return (

@@ -1,18 +1,16 @@
 import "server-only";
+import type { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 import { jwtSecretBytes } from "@/lib/admin-auth";
+import { readSessionTokenFromRequest } from "@/lib/auth-cookie";
 
 export type SessionUser = {
   sub: string;
   role: "admin" | "employee";
 };
 
-export async function verifySessionBearer(
-  authorization: string | null
-): Promise<SessionUser | null> {
-  if (!authorization?.startsWith("Bearer ")) return null;
-  const token = authorization.slice("Bearer ".length).trim();
-  if (!token) return null;
+export async function verifySessionToken(token: string | null): Promise<SessionUser | null> {
+  if (!token || token === "cookie") return null;
   try {
     const { payload } = await jwtVerify(token, jwtSecretBytes(), {
       issuer: process.env.JWT_ISSUER || "shivtatva",
@@ -26,4 +24,16 @@ export async function verifySessionBearer(
   } catch {
     return null;
   }
+}
+
+export async function verifySessionBearer(
+  authorization: string | null
+): Promise<SessionUser | null> {
+  if (!authorization?.startsWith("Bearer ")) return null;
+  const token = authorization.slice("Bearer ".length).trim();
+  return verifySessionToken(token);
+}
+
+export async function verifySessionRequest(req: Request | NextRequest): Promise<SessionUser | null> {
+  return verifySessionToken(readSessionTokenFromRequest(req));
 }

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { gatewayBaseUrl, signGatewayJwt, shouldUseHrmsFallback } from "@/lib/gateway-token";
 import { hrmsFallbackResponse } from "@/lib/hrms-fallback";
-import { verifySessionBearer } from "@/lib/session-jwt";
+import { verifySessionRequest } from "@/lib/session-jwt";
 
 type Ctx = { params: Promise<{ path: string[] }> };
 
 async function proxy(req: NextRequest, pathParts: string[]) {
-  const session = await verifySessionBearer(req.headers.get("authorization"));
+  const session = await verifySessionRequest(req);
   if (!session) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }

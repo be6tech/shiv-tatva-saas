@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { marketingSurface } from "@/components/marketing/marketing-styles";
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
+import { COOKIE_SESSION_MARKER } from "@/lib/auth-client";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/features/auth/useAuth";
 import * as React from "react";
@@ -150,12 +151,14 @@ export default function AdminEmployeesPage() {
       }),
     })
       .then(async (r) => {
+        const loginHeaders: Record<string, string> = { "Content-Type": "application/json" };
+        if (auth.token && auth.token !== COOKIE_SESSION_MARKER) {
+          loginHeaders.Authorization = `Bearer ${auth.token}`;
+        }
         const loginRes = await fetch("/api/admin/employees", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${auth.token}`,
-          },
+          credentials: "include",
+          headers: loginHeaders,
           body: JSON.stringify({ employeeId: id, email: fEmail.trim() }),
         });
         const loginData = (await loginRes.json()) as { ok?: boolean; error?: string; hint?: string };
