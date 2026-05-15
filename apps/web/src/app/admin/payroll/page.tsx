@@ -38,6 +38,11 @@ type PayslipRow = {
   updatedAt: string;
 };
 
+function parseAmount(value: string): number {
+  const n = Number(String(value).replace(/,/g, "").trim());
+  return Number.isFinite(n) ? n : 0;
+}
+
 export default function AdminPayrollPage() {
   const auth = useAuth();
   const [error, setError] = React.useState<string | null>(null);
@@ -46,15 +51,15 @@ export default function AdminPayrollPage() {
   const [employees, setEmployees] = React.useState<ApiEmployee[]>([]);
 
   const [employeeId, setEmployeeId] = React.useState("");
-  const [month, setMonth] = React.useState(() => new Date().toISOString().slice(0, 7));
-  const [basic, setBasic] = React.useState(65000);
-  const [hra, setHra] = React.useState(18000);
-  const [allowances, setAllowances] = React.useState(6000);
-  const [bonus, setBonus] = React.useState(0);
-  const [pf, setPf] = React.useState(1800);
-  const [esi, setEsi] = React.useState(0);
-  const [tds, setTds] = React.useState(2500);
-  const [otherDeductions, setOtherDeductions] = React.useState(0);
+  const [month, setMonth] = React.useState("");
+  const [basic, setBasic] = React.useState("");
+  const [hra, setHra] = React.useState("");
+  const [allowances, setAllowances] = React.useState("");
+  const [bonus, setBonus] = React.useState("");
+  const [pf, setPf] = React.useState("");
+  const [esi, setEsi] = React.useState("");
+  const [tds, setTds] = React.useState("");
+  const [otherDeductions, setOtherDeductions] = React.useState("");
   const [notes, setNotes] = React.useState("");
   const [generating, setGenerating] = React.useState(false);
 
@@ -69,11 +74,11 @@ export default function AdminPayrollPage() {
       .then(([p, e]) => {
         setRows(p.payslips ?? []);
         setEmployees(e.employees ?? []);
-        if ((e.employees ?? []).length && !employeeId) setEmployeeId(e.employees[0]!.id);
+        // Keep "Select employee" until admin picks one explicitly
       })
       .catch((e) => setError(e instanceof Error ? e.message : "Failed to load payroll"))
       .finally(() => setLoading(false));
-  }, [auth.hydrated, auth.token, employeeId]);
+  }, [auth.hydrated, auth.token]);
 
   React.useEffect(() => {
     load();
@@ -81,6 +86,11 @@ export default function AdminPayrollPage() {
 
   const generate = React.useCallback(() => {
     if (!auth.token) return;
+    const basicNum = parseAmount(basic);
+    if (!employeeId || !month || basicNum <= 0) {
+      setError("Select employee, pay month, and enter basic salary.");
+      return;
+    }
     setGenerating(true);
     setError(null);
     apiFetch<{ ok: boolean; payslip: PayslipRow }>("/admin/payslips/generate", {
@@ -89,14 +99,14 @@ export default function AdminPayrollPage() {
       body: JSON.stringify({
         employeeId,
         month,
-        basic,
-        hra,
-        allowances,
-        bonus,
-        pf,
-        esi,
-        tds,
-        otherDeductions,
+        basic: basicNum,
+        hra: parseAmount(hra),
+        allowances: parseAmount(allowances),
+        bonus: parseAmount(bonus),
+        pf: parseAmount(pf),
+        esi: parseAmount(esi),
+        tds: parseAmount(tds),
+        otherDeductions: parseAmount(otherDeductions),
         notes,
       }),
     })
@@ -109,8 +119,13 @@ export default function AdminPayrollPage() {
   }, [auth.token, employeeId, month, basic, hra, allowances, bonus, pf, esi, tds, otherDeductions, notes, load]);
 
   const totals = React.useMemo(() => {
-    const earnings = basic + hra + allowances + bonus;
-    const deductions = pf + esi + tds + otherDeductions;
+    const earnings =
+      parseAmount(basic) +
+      parseAmount(hra) +
+      parseAmount(allowances) +
+      parseAmount(bonus);
+    const deductions =
+      parseAmount(pf) + parseAmount(esi) + parseAmount(tds) + parseAmount(otherDeductions);
     const net = Math.max(0, earnings - deductions);
     return { earnings, deductions, net };
   }, [basic, hra, allowances, bonus, pf, esi, tds, otherDeductions]);
@@ -287,89 +302,105 @@ export default function AdminPayrollPage() {
           </div>
           <div className="mt-6 grid gap-3">
             <select
-              className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
+              className="form-select w-full"
               value={employeeId}
               onChange={(e) => setEmployeeId(e.target.value)}
             >
+              <option value="" disabled>
+                Select employee
+              </option>
               {employees.map((emp) => (
                 <option key={emp.id} value={emp.id}>
                   {emp.name} ({emp.id})
                 </option>
               ))}
-              {!employees.length ? <option value="">No employees loaded</option> : null}
+              {!employees.length ? (
+                <option value="" disabled>
+                  No employees loaded
+                </option>
+              ) : null}
             </select>
             <input
-              className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
+              className="form-input w-full"
               type="month"
               value={month}
               onChange={(e) => setMonth(e.target.value)}
+              aria-label="Pay month"
             />
 
             <div className="grid gap-3 sm:grid-cols-2">
               <input
-                className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
-                type="number"
+                className="form-input w-full placeholder:text-muted-foreground"
+                type="text"
+                inputMode="decimal"
                 value={basic}
-                onChange={(e) => setBasic(Number(e.target.value))}
-                placeholder="Basic"
+                onChange={(e) => setBasic(e.target.value)}
+                placeholder="Basic salary (e.g. 65000)"
               />
               <input
-                className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
-                type="number"
+                className="form-input w-full placeholder:text-muted-foreground"
+                type="text"
+                inputMode="decimal"
                 value={hra}
-                onChange={(e) => setHra(Number(e.target.value))}
-                placeholder="HRA"
+                onChange={(e) => setHra(e.target.value)}
+                placeholder="HRA (e.g. 18000)"
               />
               <input
-                className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
-                type="number"
+                className="form-input w-full placeholder:text-muted-foreground"
+                type="text"
+                inputMode="decimal"
                 value={allowances}
-                onChange={(e) => setAllowances(Number(e.target.value))}
-                placeholder="Allowances"
+                onChange={(e) => setAllowances(e.target.value)}
+                placeholder="Allowances (e.g. 6000)"
               />
               <input
-                className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
-                type="number"
+                className="form-input w-full placeholder:text-muted-foreground"
+                type="text"
+                inputMode="decimal"
                 value={bonus}
-                onChange={(e) => setBonus(Number(e.target.value))}
-                placeholder="Bonus"
+                onChange={(e) => setBonus(e.target.value)}
+                placeholder="Bonus (optional, e.g. 5000)"
               />
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
               <input
-                className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
-                type="number"
+                className="form-input w-full placeholder:text-muted-foreground"
+                type="text"
+                inputMode="decimal"
                 value={pf}
-                onChange={(e) => setPf(Number(e.target.value))}
-                placeholder="PF"
+                onChange={(e) => setPf(e.target.value)}
+                placeholder="PF deduction (e.g. 1800)"
               />
               <input
-                className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
-                type="number"
+                className="form-input w-full placeholder:text-muted-foreground"
+                type="text"
+                inputMode="decimal"
                 value={tds}
-                onChange={(e) => setTds(Number(e.target.value))}
-                placeholder="TDS"
+                onChange={(e) => setTds(e.target.value)}
+                placeholder="TDS (e.g. 2500)"
               />
               <input
-                className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
-                type="number"
+                className="form-input w-full placeholder:text-muted-foreground"
+                type="text"
+                inputMode="decimal"
                 value={esi}
-                onChange={(e) => setEsi(Number(e.target.value))}
-                placeholder="ESI"
+                onChange={(e) => setEsi(e.target.value)}
+                placeholder="ESI (optional)"
               />
               <input
-                className="h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
-                type="number"
+                className="form-input w-full placeholder:text-muted-foreground"
+                type="text"
+                inputMode="decimal"
                 value={otherDeductions}
-                onChange={(e) => setOtherDeductions(Number(e.target.value))}
-                placeholder="Other deductions"
+                onChange={(e) => setOtherDeductions(e.target.value)}
+                placeholder="Other deductions (optional)"
               />
             </div>
 
             <textarea
-              className="min-h-24 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 py-3 text-sm outline-none focus:ring-[#F57C00]/40"
-              placeholder="Notes (optional)"
+              className="form-textarea w-full placeholder:text-muted-foreground"
+              placeholder="Notes — optional remarks for this payslip"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
             />
@@ -395,7 +426,7 @@ export default function AdminPayrollPage() {
             <button
               type="button"
               onClick={generate}
-              disabled={generating || !month || !employeeId || basic <= 0}
+              disabled={generating || !month || !employeeId || parseAmount(basic) <= 0}
               className="inline-flex items-center justify-center gap-2 rounded-2xl px-4 py-3 text-sm font-semibold text-white bg-gradient-to-r from-[#F57C00] to-[#ff9a3d] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               <Wallet className="h-4 w-4" />
