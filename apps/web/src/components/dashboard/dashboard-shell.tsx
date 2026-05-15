@@ -171,10 +171,15 @@ export function DashboardShell({
   children: React.ReactNode;
 }>) {
   const router = useRouter();
+  const pathname = usePathname();
   const auth = useAuth();
   const [employeeName, setEmployeeName] = React.useState<string | null>(null);
   const adminLabel =
     role === "admin" && auth.userId?.includes("@") ? auth.userId : role === "admin" ? "Admin" : null;
+  const homeHref = role === "admin" ? "/admin" : "/employee";
+  const onDashboardHome = pathname === homeHref;
+  const backHref = onDashboardHome ? "/" : homeHref;
+  const backLabel = onDashboardHome ? "Back to website" : "Back to dashboard";
 
   React.useEffect(() => {
     if (!auth.hydrated) return;
@@ -212,11 +217,11 @@ export function DashboardShell({
             <div className="border-b border-border bg-muted/50 dark:bg-muted/20">
               <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2.5">
                 <Link
-                  href="/"
+                  href={backHref}
                   className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-[#F57C00]"
                 >
                   <ArrowLeft className="h-4 w-4 shrink-0 text-[#F57C00]" aria-hidden />
-                  <span>Back to website</span>
+                  <span>{backLabel}</span>
                 </Link>
               </div>
             </div>
