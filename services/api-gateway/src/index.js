@@ -655,6 +655,81 @@ app.post(
 );
 
 app.post(
+  "/attendance/undo-last",
+  requireAuth({ roles: ["employee", "admin"] }),
+  (req, res) => {
+    const dateKey = new Date().toISOString().slice(0, 10);
+    const employeeId = String(req.user?.sub || "");
+    const k = attendanceKey(dateKey, employeeId);
+    const day = attendanceStore.get(k);
+    if (!day?.events?.length) {
+      return res.status(400).json({ error: "no_events" });
+    }
+    const events = day.events.slice(0, -1);
+    if (events.length === 0) {
+      attendanceStore.delete(k);
+      scheduleSave();
+      const shiftId = employeeShift.get(employeeId) || "morning";
+      const shift = shiftTypes.find((s) => s.id === shiftId) || shiftTypes[0];
+      return res.json({
+        day: null,
+        allowed: nextAllowedFromEvents([]),
+        status: statusFromEvents([]),
+        shift,
+      });
+    }
+    const next = { ...day, events };
+    attendanceStore.set(k, next);
+    scheduleSave();
+    res.json({
+      day: next,
+      allowed: nextAllowedFromEvents(next.events),
+      status: statusFromEvents(next.events),
+    });
+  }
+);
+
+app.post(
+  "/attendance/remove-event",
+  requireAuth({ roles: ["employee", "admin"] }),
+  (req, res) => {
+    const schema = z.object({ index: z.number().int().nonnegative() });
+    const parsed = schema.safeParse(req.body);
+    if (!parsed.success) return res.status(400).json({ error: "invalid_body" });
+
+    const dateKey = new Date().toISOString().slice(0, 10);
+    const employeeId = String(req.user?.sub || "");
+    const k = attendanceKey(dateKey, employeeId);
+    const day = attendanceStore.get(k);
+    if (!day?.events?.length) {
+      return res.status(400).json({ error: "no_events" });
+    }
+    const idx = parsed.data.index;
+    if (idx >= day.events.length) {
+      return res.status(400).json({ error: "invalid_index" });
+    }
+    const events = day.events.filter((_, i) => i !== idx);
+    if (events.length === 0) {
+      attendanceStore.delete(k);
+      scheduleSave();
+      return res.json({
+        day: null,
+        allowed: nextAllowedFromEvents([]),
+        status: statusFromEvents([]),
+      });
+    }
+    const next = { ...day, events };
+    attendanceStore.set(k, next);
+    scheduleSave();
+    res.json({
+      day: next,
+      allowed: nextAllowedFromEvents(next.events),
+      status: statusFromEvents(next.events),
+    });
+  }
+);
+
+app.post(
   "/attendance/reset",
   requireAuth({ roles: ["employee", "admin"] }),
   (req, res) => {

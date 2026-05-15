@@ -12,7 +12,7 @@ import {
 import { formatTime } from "@/lib/time";
 import * as React from "react";
 import { motion } from "framer-motion";
-import { CalendarClock, Timer, Activity, RotateCcw } from "lucide-react";
+import { CalendarClock, Timer, Activity, Pencil, X } from "lucide-react";
 import { useAuth } from "@/features/auth/useAuth";
 import { apiFetch } from "@/lib/api";
 
@@ -55,9 +55,11 @@ export default function EmployeeAttendancePage() {
     department,
   });
 
+  const [editMode, setEditMode] = React.useState(false);
   const events = attendance.day?.events ?? [];
   const status = statusFromEvents(events);
   const d = computeDurations(events);
+  const lastEvent = events[events.length - 1];
 
   return (
     <DashboardShell role="employee" title="Attendance">
@@ -160,15 +162,40 @@ export default function EmployeeAttendancePage() {
                   Available actions adapt to the attendance flow.
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={attendance.resetToday}
-                className="inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold text-white/90 bg-white/5 ring-1 ring-white/10 hover:bg-white/10 transition"
-              >
-                <RotateCcw className="h-4 w-4" />
-                Reset (demo)
-              </button>
+              {events.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setEditMode((v) => !v)}
+                  className={cn(
+                    "inline-flex items-center gap-2 rounded-2xl px-4 py-2 text-sm font-semibold transition ring-1",
+                    editMode
+                      ? "text-white bg-[#f97316]/20 ring-[#f97316]/40"
+                      : "text-white/90 bg-white/5 ring-white/10 hover:bg-white/10"
+                  )}
+                >
+                  <Pencil className="h-4 w-4" />
+                  {editMode ? "Done editing" : "Edit"}
+                </button>
+              ) : null}
             </div>
+
+            {editMode && events.length > 0 ? (
+              <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-3">
+                <p className="text-sm text-amber-100/90">
+                  Mistaken check-in or check-out? Undo the last action or remove a specific entry in the timeline below.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    attendance.undoLastEvent();
+                    if (events.length <= 1) setEditMode(false);
+                  }}
+                  className="inline-flex items-center justify-center rounded-xl px-4 py-2.5 text-sm font-semibold text-white bg-amber-600/80 hover:bg-amber-600 ring-1 ring-amber-500/40"
+                >
+                  Undo last: {lastEvent ? labels[lastEvent.type as keyof typeof labels] : "action"}
+                </button>
+              </div>
+            ) : null}
 
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {(
@@ -238,7 +265,22 @@ export default function EmployeeAttendancePage() {
                         })}
                       </div>
                     </div>
-                    <div className="text-xs text-slate-300/70">#{idx + 1}</div>
+                    {editMode ? (
+                      <button
+                        type="button"
+                        title="Remove this entry"
+                        onClick={() => {
+                          attendance.removeEventAt(idx);
+                          if (events.length <= 1) setEditMode(false);
+                        }}
+                        className="inline-flex items-center gap-1 rounded-xl px-2.5 py-1.5 text-xs font-semibold text-red-200 bg-red-500/15 ring-1 ring-red-500/30 hover:bg-red-500/25"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                        Remove
+                      </button>
+                    ) : (
+                      <div className="text-xs text-slate-300/70">#{idx + 1}</div>
+                    )}
                   </motion.div>
                 ))
               )}

@@ -158,29 +158,107 @@ export function useAttendance(params: {
       });
   };
 
-  const resetToday = () => {
+  const applyDayUpdate = (r: {
+    day: AttendanceDay | null;
+    allowed?: AttendanceEventType[];
+    status?: string;
+  }) => {
+    setApiDay(r.day);
+    setApiAllowed(r.allowed ?? null);
+    setApiStatus(r.status ?? null);
+    setApiError(null);
+    setApiErrorCode(null);
+  };
+
+  const undoLastEvent = () => {
     if (useApi) {
-      apiFetch<{ ok: boolean }>("/attendance/reset", {
+      setApiError(null);
+      apiFetch<{
+        day: AttendanceDay | null;
+        allowed?: AttendanceEventType[];
+        status?: string;
+      }>("/attendance/undo-last", {
         method: "POST",
         token: auth.token,
         body: JSON.stringify({}),
       })
-        .then(() => {
-          setApiDay(null);
-          setApiAllowed(null);
-          setApiStatus(null);
-          setApiError(null);
-          setApiErrorCode(null);
-        })
-        .catch(() => {});
+        .then(applyDayUpdate)
+        .catch((e) => {
+          setApiError(e instanceof Error ? e.message : "Could not undo last action");
+        });
       return;
     }
     setStore((prev) => {
-      const next = { ...prev };
-      delete next[key];
+      const existing = prev[key];
+      if (!existing?.events.length) return prev;
+      const events = existing.events.slice(0, -1);
+      if (events.length === 0) {
+        const next = { ...prev };
+        delete next[key];
+        saveStore(next);
+        return next;
+      }
+      const next = {
+        ...prev,
+        [key]: { ...existing, events },
+      };
       saveStore(next);
       return next;
     });
+  };
+
+  const removeEventAt = (index: number) => {
+    if (useApi) {
+      setApiError(null);
+      apiFetch<{
+        day: AttendanceDay | null;
+        allowed?: AttendanceEventType[];
+        status?: string;
+      }>("/attendance/remove-event", {
+        method: "POST",
+        token: auth.token,
+        body: JSON.stringify({ index }),
+      })
+        .then(applyDayUpdate)
+        .catch((e) => {
+          setApiError(e instanceof Error ? e.message : "Could not remove event");
+        });
+      return;
+    }
+    setStore((prev) => {
+      const existing = prev[key];
+      if (!existing?.events.length) return prev;
+      const events = existing.events.filter((_, i) => i !== index);
+      if (events.length === 0) {
+        const next = { ...prev };
+        delete next[key];
+        saveStore(next);
+        return next;
+      }
+      const next = {
+        ...prev,
+        [key]: { ...existing, events },
+      };
+      saveStore(next);
+      return next;
+    });
+  };
+
+  const refreshToday = () => {
+    if (!useApi) return;
+    apiFetch<{
+      day: AttendanceDay | null;
+      shift?: ShiftInfo;
+      allowed?: AttendanceEventType[];
+      status?: string;
+    }>("/attendance/today", { token: auth.token })
+      .then((r) => {
+        setApiDay(r.day);
+        setApiShift(r.shift ?? null);
+        setApiAllowed(r.allowed ?? null);
+        setApiStatus(r.status ?? null);
+      })
+      .catch(() => {});
   };
 
   return {
@@ -188,7 +266,9 @@ export function useAttendance(params: {
     allowed,
     addEvent,
     addEventOverride,
-    resetToday,
+    undoLastEvent,
+    removeEventAt,
+    refreshToday,
     dateKey,
     source: useApi ? ("api" as const) : ("local" as const),
     shift: useApi ? apiShift : null,
