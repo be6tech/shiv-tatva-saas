@@ -17,7 +17,6 @@ import {
   LogOut,
   Inbox,
   ArrowLeft,
-  LogIn,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useAuth } from "@/features/auth/useAuth";
@@ -148,16 +147,7 @@ function Sidebar({
         })}
       </nav>
 
-      <div className="mt-auto space-y-2 border-t border-border p-4">
-        {role === "admin" ? (
-          <Link
-            href="/login/admin"
-            className="flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-2.5 text-sm font-medium text-muted-foreground ring-1 ring-border bg-background/50 hover:bg-muted hover:text-foreground transition"
-          >
-            <LogIn className="h-4 w-4 text-[#F57C00]" aria-hidden />
-            Back to login page
-          </Link>
-        ) : null}
+      <div className="mt-auto border-t border-border p-4">
         <button
           type="button"
           onClick={onLogout}
@@ -181,16 +171,10 @@ export function DashboardShell({
   children: React.ReactNode;
 }>) {
   const router = useRouter();
-  const pathname = usePathname();
   const auth = useAuth();
   const [employeeName, setEmployeeName] = React.useState<string | null>(null);
   const adminLabel =
     role === "admin" && auth.userId?.includes("@") ? auth.userId : role === "admin" ? "Admin" : null;
-  const homeHref = role === "admin" ? "/admin" : "/employee";
-  const showBackToDashboard = pathname !== homeHref;
-  const showAdminTopBar = role === "admin" && (showBackToDashboard || pathname === homeHref);
-  const showEmployeeTopBar = role === "employee" && (showBackToDashboard || pathname === homeHref);
-  const showTopBackBar = showAdminTopBar || showEmployeeTopBar;
 
   React.useEffect(() => {
     if (!auth.hydrated) return;
@@ -225,64 +209,17 @@ export function DashboardShell({
         />
         <div className="flex-1">
           <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80">
-            {showTopBackBar ? (
-              <div className="border-b border-border bg-muted/50 dark:bg-muted/20">
-                <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2.5">
-                  {role === "admin" ? (
-                    <div className="flex min-h-11 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2">
-                      {showBackToDashboard ? (
-                        <Link
-                          href={homeHref}
-                          className="inline-flex max-w-full items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-[#F57C00]"
-                        >
-                          <ArrowLeft className="h-4 w-4 shrink-0 text-[#F57C00]" aria-hidden />
-                          <span>Back to dashboard</span>
-                        </Link>
-                      ) : null}
-                      <Link
-                        href="/login/admin"
-                        className={cn(
-                          "inline-flex items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-[#F57C00] sm:shrink-0",
-                          showBackToDashboard && "sm:ml-auto"
-                        )}
-                      >
-                        <LogIn className="h-4 w-4 shrink-0 text-[#F57C00]" aria-hidden />
-                        <span>Back to login page</span>
-                      </Link>
-                    </div>
-                  ) : (
-                    <div className="flex min-h-11 flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-6 sm:gap-y-2">
-                      {showBackToDashboard ? (
-                        <Link
-                          href={homeHref}
-                          className="inline-flex max-w-full items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-[#F57C00]"
-                        >
-                          <ArrowLeft className="h-4 w-4 shrink-0 text-[#F57C00]" aria-hidden />
-                          <span>Back to dashboard</span>
-                        </Link>
-                      ) : null}
-                      <Link
-                        href="/login/employee"
-                        className={cn(
-                          "inline-flex items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-[#F57C00] sm:shrink-0",
-                          showBackToDashboard && "sm:ml-auto"
-                        )}
-                      >
-                        <ArrowLeft className="h-4 w-4 shrink-0 text-[#F57C00]" aria-hidden />
-                        <span>Back to login page</span>
-                      </Link>
-                      <Link
-                        href="/"
-                        className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-[#F57C00]"
-                      >
-                        <ArrowLeft className="h-4 w-4 shrink-0 opacity-70" aria-hidden />
-                        <span>Back to website</span>
-                      </Link>
-                    </div>
-                  )}
-                </div>
+            <div className="border-b border-border bg-muted/50 dark:bg-muted/20">
+              <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-2.5">
+                <Link
+                  href="/"
+                  className="inline-flex min-h-11 items-center gap-2 text-sm font-medium text-foreground transition-colors hover:text-[#F57C00]"
+                >
+                  <ArrowLeft className="h-4 w-4 shrink-0 text-[#F57C00]" aria-hidden />
+                  <span>Back to website</span>
+                </Link>
               </div>
-            ) : null}
+            </div>
             <div className="mx-auto flex min-h-14 max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
               <div className="min-w-0 flex-1">
                 <div className="text-sm text-muted-foreground">
@@ -301,4 +238,3 @@ export function DashboardShell({
     </div>
   );
 }
-
