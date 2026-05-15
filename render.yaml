@@ -14,3 +14,8 @@ services:
         generateValue: true
       - key: PORT
         value: 4000
+      # Same Supabase project as Vercel (copy from Vercel env). Run apps/web/supabase/hrms_store.sql first.
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false

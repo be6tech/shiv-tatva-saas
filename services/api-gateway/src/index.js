@@ -1,7 +1,4 @@
 import "dotenv/config";
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import express from "express";
 import cors from "cors";
 import helmet from "helmet";
@@ -10,6 +7,7 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { requireAuth } from "./auth/jwt.js";
 import { employeesSeed, employeeShiftSeed } from "./employees-seed.js";
+import { getStorageMode, loadPersistedState, schedulePersist } from "./persist.js";
 
 const app = express();
 app.use(helmet());
@@ -18,7 +16,12 @@ app.use(express.json({ limit: "1mb" }));
 app.use(morgan("dev"));
 
 app.get("/health", (_req, res) => {
-  res.json({ ok: true, service: "api-gateway", ts: new Date().toISOString() });
+  res.json({
+    ok: true,
+    service: "api-gateway",
+    storage: getStorageMode(),
+    ts: new Date().toISOString(),
+  });
 });
 
 // Demo login issuing JWTs (replace with real auth + OAuth later)
@@ -302,56 +305,26 @@ app.get("/employee/me", requireAuth({ roles: ["employee", "admin"] }), (req, res
 });
 
 // ---------------------------------------------------------------------------
-// Attendance (in-memory demo store; swap to DB + Redis later)
+// HRMS state (in-memory; persisted to Supabase hrms_store or data/db.json)
 // ---------------------------------------------------------------------------
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const DATA_DIR = path.resolve(__dirname, "..", "data");
-const DATA_PATH = path.join(DATA_DIR, "db.json");
-
-function ensureDataDir() {
-  try {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  } catch {
-    // ignore
-  }
+function getHrmsSnapshot() {
+  return {
+    employees,
+    attendance: Object.fromEntries(attendanceStore.entries()),
+    employeeShift: Object.fromEntries(employeeShift.entries()),
+    leaveRequests,
+    tasks,
+    payslips,
+    notifications,
+    leads,
+    anomalyEmitted,
+    orgSettings,
+  };
 }
 
-function loadDb() {
-  ensureDataDir();
-  try {
-    const raw = fs.readFileSync(DATA_PATH, "utf8");
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-let saveTimer = null;
 function scheduleSave() {
-  if (saveTimer) return;
-  saveTimer = setTimeout(() => {
-    saveTimer = null;
-    try {
-      ensureDataDir();
-      const payload = {
-        employees,
-        attendance: Object.fromEntries(attendanceStore.entries()),
-        employeeShift: Object.fromEntries(employeeShift.entries()),
-        leaveRequests,
-        tasks,
-        payslips,
-        notifications,
-        leads,
-        anomalyEmitted,
-        orgSettings,
-      };
-      fs.writeFileSync(DATA_PATH, JSON.stringify(payload, null, 2), "utf8");
-    } catch {
-      // ignore
-    }
-  }, 250);
+  schedulePersist(getHrmsSnapshot);
 }
 
 function mergeEmployeesFromDb(persisted) {
@@ -412,41 +385,47 @@ let orgSettings = {
   anomalySpikeRatio: 0.4,
 };
 
-// hydrate persisted state
-const db = loadDb();
-if (Array.isArray(db?.employees) && db.employees.length > 0) {
-  employees = mergeEmployeesFromDb(db.employees);
-}
-if (db?.attendance && typeof db.attendance === "object") {
-  for (const [k, v] of Object.entries(db.attendance)) {
-    attendanceStore.set(k, v);
+function applyPersistedDb(db) {
+  if (!db || typeof db !== "object") return;
+  if (Array.isArray(db.employees) && db.employees.length > 0) {
+    employees = mergeEmployeesFromDb(db.employees);
+  }
+  if (db.attendance && typeof db.attendance === "object") {
+    for (const [k, v] of Object.entries(db.attendance)) {
+      attendanceStore.set(k, v);
+    }
+  }
+  if (db.employeeShift && typeof db.employeeShift === "object") {
+    for (const [k, v] of Object.entries(db.employeeShift)) {
+      employeeShift.set(k, String(v));
+    }
+  }
+  if (Array.isArray(db.leaveRequests)) {
+    leaveRequests.splice(0, leaveRequests.length, ...db.leaveRequests);
+  }
+  if (Array.isArray(db.tasks)) {
+    tasks.splice(0, tasks.length, ...db.tasks);
+  }
+  if (Array.isArray(db.payslips)) {
+    payslips.splice(0, payslips.length, ...db.payslips);
+  }
+  if (Array.isArray(db.notifications)) {
+    notifications.splice(0, notifications.length, ...db.notifications);
+  }
+  if (Array.isArray(db.leads)) {
+    leads.splice(0, leads.length, ...db.leads);
+  }
+  if (db.anomalyEmitted && typeof db.anomalyEmitted === "object") {
+    anomalyEmitted = db.anomalyEmitted;
+  }
+  if (db.orgSettings && typeof db.orgSettings === "object") {
+    orgSettings = { ...orgSettings, ...db.orgSettings };
   }
 }
-if (db?.employeeShift && typeof db.employeeShift === "object") {
-  for (const [k, v] of Object.entries(db.employeeShift)) {
-    employeeShift.set(k, String(v));
-  }
-}
-if (Array.isArray(db?.leaveRequests)) {
-  leaveRequests.splice(0, leaveRequests.length, ...db.leaveRequests);
-}
-if (Array.isArray(db?.tasks)) {
-  tasks.splice(0, tasks.length, ...db.tasks);
-}
-if (Array.isArray(db?.payslips)) {
-  payslips.splice(0, payslips.length, ...db.payslips);
-}
-if (Array.isArray(db?.notifications)) {
-  notifications.splice(0, notifications.length, ...db.notifications);
-}
-if (Array.isArray(db?.leads)) {
-  leads.splice(0, leads.length, ...db.leads);
-}
-if (db?.anomalyEmitted && typeof db.anomalyEmitted === "object") {
-  anomalyEmitted = db.anomalyEmitted;
-}
-if (db?.orgSettings && typeof db.orgSettings === "object") {
-  orgSettings = { ...orgSettings, ...db.orgSettings };
+
+async function hydrateState() {
+  const db = await loadPersistedState();
+  applyPersistedDb(db);
 }
 
 function nextAllowedFromEvents(events) {
@@ -1420,8 +1399,20 @@ app.get("/admin/notifications/anomalies", requireAuth({ roles: ["admin"] }), asy
 });
 
 const port = Number(process.env.PORT || 4000);
-app.listen(port, () => {
+
+async function main() {
+  await hydrateState();
+  app.listen(port, () => {
+    // eslint-disable-next-line no-console
+    console.log(
+      `[api-gateway] listening on http://localhost:${port} (storage: ${getStorageMode()})`
+    );
+  });
+}
+
+main().catch((err) => {
   // eslint-disable-next-line no-console
-  console.log(`[api-gateway] listening on http://localhost:${port}`);
+  console.error("[api-gateway] failed to start:", err);
+  process.exit(1);
 });
 
