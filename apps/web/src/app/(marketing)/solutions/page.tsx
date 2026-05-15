@@ -56,10 +56,10 @@ export default function SolutionsPage() {
             <SolutionWorkflowPreview solutionId={i.id} title={i.title} />
             <div className="mt-5 flex items-center gap-3">
               <Link
-                href="/contact#book-demo"
+                href="/contact#contact-form"
                 className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ea580c] to-[#fb923c] px-4 py-2 text-sm font-semibold text-white dark:from-[#f97316] dark:to-amber-400"
               >
-                Request a demo <ArrowRight className="h-4 w-4" />
+                Contact sales <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </section>

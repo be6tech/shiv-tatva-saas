@@ -11,8 +11,6 @@ import { Download, Filter, RefreshCw } from "lucide-react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/features/auth/useAuth";
 
-const STORAGE_KEY = "shivtatva.attendance.v1";
-
 type LiveStatusRow = {
   employeeId: string;
   employeeName: string;
@@ -29,23 +27,10 @@ type LiveStatusRow = {
 
 type ShiftInfo = { id: string; name: string; start: string; end: string };
 
-function loadAll(): AttendanceDay[] {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return [];
-    const store = JSON.parse(raw) as Record<string, AttendanceDay>;
-    return Object.values(store);
-  } catch {
-    return [];
-  }
-}
-
 export default function AdminAttendancePage() {
   const today = formatDateKey(new Date());
   const auth = useAuth();
-  const [rows, setRows] = React.useState<AttendanceDay[]>(() =>
-    loadAll().filter((r) => r.dateKey === today)
-  );
+  const [rows, setRows] = React.useState<AttendanceDay[]>([]);
   const [live, setLive] = React.useState<LiveStatusRow[]>([]);
   const [shifts, setShifts] = React.useState<ShiftInfo[]>([]);
   const [shiftEmployees, setShiftEmployees] = React.useState<{ id: string; name: string }[]>([]);
@@ -53,16 +38,13 @@ export default function AdminAttendancePage() {
   const [assigning, setAssigning] = React.useState(false);
   const [dept, setDept] = React.useState<string>("All");
   const refresh = React.useCallback(() => {
-    if (auth.hydrated && auth.token) {
-      apiFetch<{ days: AttendanceDay[] }>("/admin/attendance/today", {
-        token: auth.token,
-      })
-        .then((r) => setRows(r.days ?? []))
-        .catch(() => setRows(loadAll().filter((r) => r.dateKey === today)));
-      return;
-    }
-    setRows(loadAll().filter((r) => r.dateKey === today));
-  }, [auth.hydrated, auth.token, today]);
+    if (!auth.hydrated || !auth.token) return;
+    apiFetch<{ days: AttendanceDay[] }>("/admin/attendance/today", {
+      token: auth.token,
+    })
+      .then((r) => setRows(r.days ?? []))
+      .catch(() => setRows([]));
+  }, [auth.hydrated, auth.token]);
 
   React.useEffect(() => {
     refresh();
@@ -183,11 +165,10 @@ export default function AdminAttendancePage() {
           <div>
             <div className="text-sm text-slate-600 dark:text-slate-300/80">Admin Attendance Table</div>
             <div className="mt-1 text-xl font-semibold">
-              Live status • productivity • overtime (demo data)
+              Live status, productivity, and overtime
             </div>
             <p className="mt-2 text-sm text-slate-600 dark:text-slate-300/90">
-              This view reads the same demo attendance events stored in the browser.
-              When backend is enabled, it will load from APIs and support exports.
+              Monitor today&apos;s attendance from check-in events across your organization. Export reports for payroll and compliance.
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
@@ -293,7 +274,7 @@ export default function AdminAttendancePage() {
           <div className={cn("lg:col-span-4", marketingSurface, "p-6")}>
             <div className="text-base font-semibold">Shift Management</div>
             <div className="mt-1 text-sm text-slate-600 dark:text-slate-300/90">
-              Assign shifts per employee (demo store).
+              Assign shifts per employee for scheduling and late/overtime rules.
             </div>
 
             <div className="mt-5 space-y-3">

@@ -233,11 +233,11 @@ export default function Home() {
                   </motion.div>
                   <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} transition={cardSpring}>
                     <Link
-                      href="/contact#book-demo"
+                      href="/contact#contact-form"
                       className="inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3.5 text-sm font-semibold text-slate-800 shadow-sm transition hover:bg-slate-50 dark:border-white/20 dark:bg-white/5 dark:text-white dark:shadow-none dark:backdrop-blur-sm dark:hover:bg-white/10"
                     >
                       <PlayCircle className="h-4 w-4" />
-                      Book Demo
+                      Contact us
                     </Link>
                   </motion.div>
                 </motion.div>

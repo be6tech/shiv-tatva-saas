@@ -122,7 +122,7 @@ export default function ContactPage() {
         source: "contact",
       }).catch(() => false);
       if (supa || sheet) {
-        setOk("Demo requested successfully.");
+        setOk("Your request was submitted successfully. We will contact you shortly.");
         setName("");
         setEmail("");
         setCompany("");
@@ -150,7 +150,7 @@ export default function ContactPage() {
         }),
       });
       await mirrorContactIntegrations(r.leadId, payload);
-      setOk("Demo requested successfully.");
+      setOk("Your request was submitted successfully. We will contact you shortly.");
       setName("");
       setEmail("");
       setCompany("");
@@ -167,7 +167,7 @@ export default function ContactPage() {
         }).catch(() => false);
         const saved = supa || sheet;
         if (saved) {
-          setOk("Demo requested successfully.");
+          setOk("Your request was submitted successfully. We will contact you shortly.");
           setName("");
           setEmail("");
           setCompany("");
@@ -189,10 +189,10 @@ export default function ContactPage() {
   return (
     <PageShell
       title="Contact"
-      subtitle="Book a demo, request a proposal, or discuss a custom enterprise deployment."
+      subtitle="Get in touch for a product walkthrough, proposal, or enterprise deployment."
     >
       <div className="grid gap-4 lg:grid-cols-12">
-        <div className={cn(marketingSurface, "p-6 lg:col-span-7")} id="book-demo">
+        <div className={cn(marketingSurface, "p-6 lg:col-span-7")} id="contact-form">
           <div className={cn("text-base font-semibold", marketingStrong)}>Send a message</div>
           <div className="mt-5">
             {ok ? (
@@ -250,7 +250,7 @@ export default function ContactPage() {
               className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ea580c] to-[#fb923c] px-4 py-3 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60 dark:from-[#f97316] dark:to-amber-400 sm:col-span-2"
             >
               {submitting ? <Calendar className="h-4 w-4" /> : <Send className="h-4 w-4" />}
-              {submitting ? "Submitting…" : "Request Demo / Callback"}
+              {submitting ? "Submitting…" : "Send message"}
             </button>
             <p className={cn(marketingMuted, "text-xs sm:col-span-2")}>
               Submissions are saved; ganeshbandaru800@gmail.com is notified by email when the lead is

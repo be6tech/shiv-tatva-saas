@@ -348,8 +348,8 @@ export function Footer({ variant = "default" }: { variant?: "default" | "dark" }
                   </Link>
                 </li>
                 <li>
-                  <Link className="text-muted-foreground hover:text-foreground" href="/contact#book-demo">
-                    Book Demo
+                  <Link className="text-muted-foreground hover:text-foreground" href="/contact#contact-form">
+                    Contact us
                   </Link>
                 </li>
               </ul>

@@ -44,6 +44,6 @@ export async function POST(req: Request) {
     ok: true,
     employeeId: row.employee_id,
     email: row.email,
-    message: "Login account created with default password demo until changed.",
+    message: "Employee login created. Share the temporary password securely and ask them to reset it on first sign-in.",
   });
 }

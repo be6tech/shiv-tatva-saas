@@ -144,7 +144,7 @@ export default function EmployeePayslipsPage() {
             Payroll notes
           </div>
           <div className="mt-2 text-sm text-slate-300/85">
-            Payslips are protected by JWT. This demo downloads a JSON payslip file.
+            Download your monthly payslip securely. Files are available after admin payroll processing.
           </div>
         </div>
       </div>

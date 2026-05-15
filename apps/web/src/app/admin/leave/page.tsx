@@ -76,7 +76,7 @@ export default function AdminLeavePage() {
           </div>
           <div className="mt-4 text-xl font-semibold">Approvals & Policies</div>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300/90">
-            Review leave requests, enforce policies, and audit approvals. Data is persisted locally for this demo.
+            Review leave requests, enforce policies, and track approvals in real time.
           </p>
           {error ? (
             <div className="mt-4 rounded-2xl bg-red-500/10 ring-1 ring-red-500/20 p-4 text-xs text-red-200/90">

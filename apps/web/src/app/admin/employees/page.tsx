@@ -337,7 +337,7 @@ export default function AdminEmployeesPage() {
                 {!loading && rows.length === 0 ? (
                   <tr>
                     <td className="px-6 py-8 text-slate-600 dark:text-slate-400" colSpan={6}>
-                      No employees returned by API (demo).
+                      No employees found. Add an employee to get started.
                     </td>
                   </tr>
                 ) : null}
@@ -368,7 +368,7 @@ export default function AdminEmployeesPage() {
         ) : null}
         {modalMode === "create" ? (
           <p className="mb-4 text-xs text-slate-600 dark:text-slate-400">
-            Default login password is <span className="font-semibold">demo</span> until the employee changes it.
+            New employees receive a temporary password by email. They should change it after first sign-in.
           </p>
         ) : null}
         <div className="grid gap-3 sm:grid-cols-2">

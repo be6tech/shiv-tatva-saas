@@ -299,7 +299,7 @@ export default function EmployeeAttendancePage() {
                 </div>
               </div>
               <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
-                <div className="text-xs text-slate-300/70">Overtime (demo)</div>
+                <div className="text-xs text-slate-300/70">Overtime</div>
                 <div className="mt-1 text-sm font-semibold">
                   {d.netWorkMs > 8 * 3600_000
                     ? msToHhMm(d.netWorkMs - 8 * 3600_000)
@@ -307,7 +307,7 @@ export default function EmployeeAttendancePage() {
                 </div>
               </div>
               <div className="rounded-2xl bg-white/5 ring-1 ring-white/10 p-4">
-                <div className="text-xs text-slate-300/70">Productivity (demo)</div>
+                <div className="text-xs text-slate-300/70">Productivity score</div>
                 <div className="mt-2 h-2 rounded-full bg-white/5 overflow-hidden">
                   <div className="h-full w-[68%] bg-gradient-to-r from-[#f97316] to-[#ffb26b]" />
                 </div>

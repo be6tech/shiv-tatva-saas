@@ -40,7 +40,7 @@ export default function EmployeeLoginPage() {
             : data.error === "not_configured"
               ? "Sign-in is not configured. Set SUPABASE_SERVICE_ROLE_KEY and run supabase/employee_users.sql."
               : data.error === "service_unavailable"
-                ? "Can't reach Supabase. In local dev use your Employee ID / email with password demo."
+                ? "Can't reach the sign-in service. Check your connection or contact your administrator."
                 : "Login failed. Please try again."
         );
         return;

@@ -106,10 +106,10 @@ export default function ProductsPage() {
 
             <div className="mt-6">
               <Link
-                href="/contact#book-demo"
+                href="/contact#contact-form"
                 className="inline-flex items-center justify-center gap-2 rounded-xl border border-border/80 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-900 transition hover:bg-slate-100 dark:border-white/10 dark:bg-white/5 dark:text-white dark:hover:bg-white/10"
               >
-                Book Demo <ArrowRight className="h-4 w-4" />
+                Contact us <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           </section>

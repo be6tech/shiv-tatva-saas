@@ -199,7 +199,7 @@ export function Navbar({ appearance = "default" }: { appearance?: "default" | "l
             <div className="hidden lg:flex items-center gap-2">
               <ThemeToggle />
               <Link
-                href="/contact#book-demo"
+                href="/contact#contact-form"
                 className={cn(
                   "inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition",
                   isLanding
@@ -208,7 +208,7 @@ export function Navbar({ appearance = "default" }: { appearance?: "default" | "l
                 )}
               >
                 <CalendarCheck className="h-4 w-4" />
-                Book Demo
+                Contact us
               </Link>
 
               <div className="relative group">
@@ -366,7 +366,7 @@ export function Navbar({ appearance = "default" }: { appearance?: "default" | "l
               </Link>
               <div className="pt-2 flex flex-col gap-2">
                 <Link
-                  href="/contact#book-demo"
+                  href="/contact#contact-form"
                   className={cn(
                     "inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold",
                     isLanding
@@ -376,7 +376,7 @@ export function Navbar({ appearance = "default" }: { appearance?: "default" | "l
                   onClick={closeMobile}
                 >
                   <CalendarCheck className="h-4 w-4" />
-                  Book Demo
+                  Contact us
                 </Link>
                 <Link
                   href="/login"

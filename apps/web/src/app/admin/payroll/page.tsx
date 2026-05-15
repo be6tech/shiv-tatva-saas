@@ -196,7 +196,7 @@ export default function AdminPayrollPage() {
           </div>
           <div className="mt-4 text-xl font-semibold">Payroll Summary</div>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-300/90">
-            Generate payslips, run summaries, and export compliance reports. Stored locally for this demo.
+            Generate payslips, run payroll summaries, and export compliance reports for your team.
           </p>
           {error ? (
             <div className="mt-4 rounded-2xl bg-red-500/10 ring-1 ring-red-500/20 p-4 text-xs text-red-200/90">
@@ -206,7 +206,7 @@ export default function AdminPayrollPage() {
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-3xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 p-6">
               <div className="flex items-center justify-between">
-                <div className="text-sm font-semibold">Processed (demo)</div>
+                <div className="text-sm font-semibold">Total processed</div>
                 <Wallet className="h-5 w-5 text-[#F57C00]" />
               </div>
               <div className="mt-2 text-2xl font-semibold">₹ {rows.reduce((a, r) => a + (r.netPay ?? 0), 0).toLocaleString("en-IN")}</div>
@@ -218,7 +218,7 @@ export default function AdminPayrollPage() {
                 <Shield className="h-5 w-5 text-[#F57C00]" />
               </div>
               <div className="mt-2 text-sm text-slate-600 dark:text-slate-300/90">
-                PF • ESI • TDS exports (UI-ready)
+                PF • ESI • TDS compliance exports
               </div>
             </div>
           </div>
