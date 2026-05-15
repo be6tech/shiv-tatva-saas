@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { gatewayBaseUrl, signGatewayJwt, useHrmsFallback } from "@/lib/gateway-token";
+import { gatewayBaseUrl, signGatewayJwt, shouldUseHrmsFallback } from "@/lib/gateway-token";
 import { hrmsFallbackResponse } from "@/lib/hrms-fallback";
 import { verifySessionBearer } from "@/lib/session-jwt";
 
@@ -14,7 +14,7 @@ async function proxy(req: NextRequest, pathParts: string[]) {
   const path = pathParts.join("/");
   const search = req.nextUrl.search;
 
-  if (useHrmsFallback()) {
+  if (shouldUseHrmsFallback()) {
     const fallback = hrmsFallbackResponse(req.method, path, search, session);
     if (fallback) return fallback;
     return NextResponse.json(

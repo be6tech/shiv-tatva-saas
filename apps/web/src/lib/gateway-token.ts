@@ -28,6 +28,6 @@ export function gatewayBaseUrl(): string | null {
   return "http://localhost:4000";
 }
 
-export function useHrmsFallback(): boolean {
+export function shouldUseHrmsFallback(): boolean {
   return gatewayBaseUrl() === null;
 }
