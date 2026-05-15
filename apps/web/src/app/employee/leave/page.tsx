@@ -71,7 +71,7 @@ export default function EmployeeLeavePage() {
       <div className="grid gap-4 lg:grid-cols-12">
         <div className="lg:col-span-7 glass rounded-3xl p-6">
           <div className="text-base font-semibold">Apply Leave</div>
-          <p className="mt-2 text-sm text-slate-300/85">
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300/85">
             Submit a leave request. Admin approvals update status in real-time.
           </p>
           {error ? (
@@ -81,7 +81,7 @@ export default function EmployeeLeavePage() {
           ) : null}
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <select
-              className="h-11 rounded-2xl bg-white/5 ring-1 ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
+              className="form-select w-full"
               value={type}
               onChange={(e) => setType(e.target.value as LeaveRequest["type"])}
             >
@@ -92,19 +92,19 @@ export default function EmployeeLeavePage() {
               ))}
             </select>
             <input
-              className="h-11 rounded-2xl bg-white/5 ring-1 ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
+              className="form-input w-full"
               type="date"
               value={from}
               onChange={(e) => setFrom(e.target.value)}
             />
             <input
-              className="h-11 rounded-2xl bg-white/5 ring-1 ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
+              className="form-input w-full"
               type="date"
               value={to}
               onChange={(e) => setTo(e.target.value)}
             />
             <textarea
-              className="sm:col-span-2 min-h-28 rounded-2xl bg-white/5 ring-1 ring-white/10 px-4 py-3 text-sm outline-none focus:ring-[#F57C00]/40"
+              className="form-textarea sm:col-span-2 w-full"
               placeholder="Reason"
               value={reason}
               onChange={(e) => setReason(e.target.value)}

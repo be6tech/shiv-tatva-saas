@@ -94,7 +94,7 @@ export default function AdminLeavePage() {
             <div className="rounded-3xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 p-5">
               <div className="text-sm font-semibold">Status Filter</div>
               <select
-                className="mt-3 h-11 w-full rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#F57C00]/40"
+                className="form-select mt-3 w-full"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as any)}
               >

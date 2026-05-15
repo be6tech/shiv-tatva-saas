@@ -105,7 +105,7 @@ export default function EmployeeNotificationsPage() {
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="h-9 rounded-2xl bg-white/5 ring-1 ring-white/10 px-3 text-xs outline-none focus:ring-[#f97316]/40"
+              className="form-select h-9 px-3 text-xs"
             >
               <option value="">All categories</option>
               <option value="leave">Leave</option>

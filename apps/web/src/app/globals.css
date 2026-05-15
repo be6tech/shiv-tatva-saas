@@ -166,4 +166,43 @@
   html {
     @apply font-sans;
   }
+
+  /* Native selects/date inputs follow light/dark (dropdown list + picker chrome). */
+  select,
+  input[type="date"],
+  input[type="datetime-local"],
+  input[type="time"] {
+    color-scheme: light;
+  }
+  .dark select,
+  .dark input[type="date"],
+  .dark input[type="datetime-local"],
+  .dark input[type="time"] {
+    color-scheme: dark;
+  }
+  select option {
+    background-color: var(--popover);
+    color: var(--popover-foreground);
+  }
+}
+
+@layer components {
+  .form-select,
+  .form-input,
+  .form-textarea {
+    @apply rounded-2xl text-sm text-foreground outline-none ring-1 ring-border;
+    @apply bg-muted/50 focus:ring-2 focus:ring-[#F57C00]/40;
+  }
+  .form-select,
+  .form-input {
+    @apply h-11 px-4;
+  }
+  .form-textarea {
+    @apply min-h-28 px-4 py-3;
+  }
+  .dark .form-select,
+  .dark .form-input,
+  .dark .form-textarea {
+    @apply bg-white/5 ring-white/10;
+  }
 }
