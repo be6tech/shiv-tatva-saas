@@ -193,7 +193,6 @@ export function Navbar({ appearance = "default" }: { appearance?: "default" | "l
               <Dropdown label="Solutions" items={solutions} isLanding={isLanding} />
               <Dropdown label="Learning" items={learning} isLanding={isLanding} />
               <NavLink href="/careers" label="Careers" isLanding={isLanding} />
-              <NavLink href="/employee-details" label="Employee details" isLanding={isLanding} />
               <NavLink href="/contact" label="Contact" isLanding={isLanding} />
             </nav>
 
@@ -340,18 +339,6 @@ export function Navbar({ appearance = "default" }: { appearance?: "default" | "l
                 onClick={closeMobile}
               >
                 Learning
-              </Link>
-              <Link
-                className={cn(
-                  "block text-sm",
-                  isLanding
-                    ? "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-                href="/employee-details"
-                onClick={closeMobile}
-              >
-                Employee details
               </Link>
               <Link
                 className={cn(

@@ -1,5 +1,5 @@
 /**
- * Employee directory for marketing `/employee-details`.
+ * Employee directory (HRMS roster / Vercel fallback).
  * Rows imported from `EMPLOYEE DETAILS.xlsx` (Employee ID, Name, Designation, Email ID).
  * Re-import: `python scripts/import-employees-xlsx.py write`
  */

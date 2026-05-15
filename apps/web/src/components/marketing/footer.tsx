@@ -154,11 +154,6 @@ export function Footer({ variant = "default" }: { variant?: "default" | "dark" }
                     </Link>
                   </li>
                   <li>
-                    <Link className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white" href="/employee-details">
-                      Employee details
-                    </Link>
-                  </li>
-                  <li>
                     <Link className="text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white" href="/contact">
                       Contact
                     </Link>
@@ -329,11 +324,6 @@ export function Footer({ variant = "default" }: { variant?: "default" | "dark" }
                 <li>
                   <Link className="text-muted-foreground hover:text-foreground" href="/contact">
                     Contact
-                  </Link>
-                </li>
-                <li>
-                  <Link className="text-muted-foreground hover:text-foreground" href="/employee-details">
-                    Employee details
                   </Link>
                 </li>
                 <li>
