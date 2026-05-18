@@ -1,6 +1,11 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  loadStateFromTables,
+  saveStateToTables,
+  useRelationalTables,
+} from "./supabase-tables.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -60,6 +65,21 @@ function loadFromFile() {
 }
 
 export async function loadPersistedState() {
+  if (supabaseConfig() && useRelationalTables()) {
+    try {
+      const data = await loadStateFromTables();
+      if (data !== null) {
+        storageMode = "supabase-tables";
+        return data;
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        "[api-gateway] Supabase tables load failed, trying hrms_store:",
+        err?.message || err
+      );
+    }
+  }
   if (supabaseConfig()) {
     try {
       const data = await loadFromSupabase();
@@ -112,6 +132,19 @@ export function schedulePersist(getSnapshot) {
   saveTimer = setTimeout(async () => {
     saveTimer = null;
     const payload = getSnapshot();
+    if (supabaseConfig() && useRelationalTables()) {
+      try {
+        await saveStateToTables(payload);
+        storageMode = "supabase-tables";
+        return;
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          "[api-gateway] Supabase tables save failed, trying hrms_store:",
+          err?.message || err
+        );
+      }
+    }
     if (supabaseConfig()) {
       try {
         await saveToSupabase(payload);
@@ -132,6 +165,14 @@ export async function seedSupabaseFromObject(payload) {
     throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required");
   }
   await saveToSupabase(payload);
+}
+
+/** One-time upload of db.json into normalized HRMS tables (scripts/seed-hrms-tables.mjs). */
+export async function seedSupabaseTablesFromObject(payload) {
+  if (!supabaseConfig()) {
+    throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required");
+  }
+  await saveStateToTables(payload);
 }
 
 export { DATA_PATH };

@@ -305,7 +305,7 @@ app.get("/employee/me", requireAuth({ roles: ["employee", "admin"] }), (req, res
 });
 
 // ---------------------------------------------------------------------------
-// HRMS state (in-memory; persisted to Supabase hrms_store or data/db.json)
+// HRMS state (in-memory; persisted to Supabase tables, hrms_store blob, or db.json)
 // ---------------------------------------------------------------------------
 
 function getHrmsSnapshot() {
