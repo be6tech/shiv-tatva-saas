@@ -116,11 +116,16 @@ export function useAttendance(params: {
         })
         .catch((e) => {
           if (e instanceof ApiError) {
-            const code =
-              typeof e.data === "object" && e.data && "error" in (e.data as any)
-                ? String((e.data as any).error)
-                : null;
+            const data = e.data as { error?: string; hint?: string } | null;
+            const code = data?.error ? String(data.error) : null;
             setApiErrorCode(code);
+            if (code === "gateway_required" || code === "gateway_unreachable") {
+              setApiError(
+                data?.hint ??
+                  "Cannot reach the HRMS server. Set API_GATEWAY_URL on Vercel and ensure Render is running."
+              );
+              return;
+            }
           }
           setApiError(e instanceof Error ? e.message : "Attendance update failed");
         });

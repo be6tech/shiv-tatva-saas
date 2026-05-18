@@ -49,20 +49,24 @@ async function proxy(req: NextRequest, pathParts: string[]) {
   try {
     upstream = await fetch(url, init);
   } catch {
-    const fallback = hrmsFallbackResponse(req.method, path, search, session);
-    if (fallback) return fallback;
+    if (req.method === "GET" || req.method === "HEAD") {
+      const fallback = hrmsFallbackResponse(req.method, path, search, session);
+      if (fallback) return fallback;
+    }
     return NextResponse.json(
       {
         error: "gateway_unreachable",
-        hint: `Cannot reach ${base}. Check API_GATEWAY_URL on Vercel and that the gateway is running.`,
+        hint: `Cannot reach ${base}. Ensure Render api-gateway is awake and JWT_SECRET matches on Vercel and Render.`,
       },
       { status: 503 }
     );
   }
 
   if (!upstream.ok && upstream.status >= 500) {
-    const fallback = hrmsFallbackResponse(req.method, path, search, session);
-    if (fallback) return fallback;
+    if (req.method === "GET" || req.method === "HEAD") {
+      const fallback = hrmsFallbackResponse(req.method, path, search, session);
+      if (fallback) return fallback;
+    }
   }
 
   const body = await upstream.text();

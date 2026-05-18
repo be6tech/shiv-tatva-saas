@@ -138,12 +138,12 @@ export function hrmsFallbackResponse(
     }
   }
 
-  if (method !== "GET") {
+  if (method !== "GET" && method !== "HEAD") {
     return json(
       {
         error: "gateway_required",
         hint:
-          "Deploy api-gateway (see render.yaml) and set API_GATEWAY_URL on Vercel for write actions (attendance, leave, etc.).",
+          "HRMS writes need the api-gateway. On Vercel set API_GATEWAY_URL=https://shivtatva-api-gateway.onrender.com and JWT_SECRET (same as Render), then redeploy.",
       },
       503
     );

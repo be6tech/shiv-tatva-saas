@@ -19,12 +19,18 @@ export function signGatewayJwt(sub: string, role: "admin" | "employee"): string 
   );
 }
 
-/** Returns null on Vercel when no public gateway URL is configured (never use localhost). */
+/** Production Render gateway (used on Vercel when env vars are missing). */
+export const DEFAULT_PRODUCTION_GATEWAY_URL =
+  "https://shivtatva-api-gateway.onrender.com";
+
+/** HRMS api-gateway base URL. Never uses localhost on Vercel. */
 export function gatewayBaseUrl(): string | null {
   const explicit =
     process.env.API_GATEWAY_URL?.trim() || process.env.NEXT_PUBLIC_API_BASE_URL?.trim();
   if (explicit) return explicit.replace(/\/+$/, "");
-  if (process.env.VERCEL) return null;
+  if (process.env.VERCEL) {
+    return DEFAULT_PRODUCTION_GATEWAY_URL.replace(/\/+$/, "");
+  }
   return "http://localhost:4000";
 }
 
