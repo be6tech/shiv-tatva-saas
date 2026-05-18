@@ -45,15 +45,50 @@ function parseAttendanceStoreKey(key, val) {
 
 function attendanceDayToRow(key, val) {
   const { date_key, employee_id } = parseAttendanceStoreKey(key, val);
-  const { events, dateKey, employeeId, employeeName, department, ...meta } = val || {};
+  const {
+    events,
+    dateKey,
+    employeeId,
+    employeeName,
+    department,
+    checkInAt,
+    checkOutAt,
+    netWorkMinutes,
+    remainingWorkMinutes,
+    workTargetMinutes,
+    expectedCheckOutAt,
+    lunchMinutes,
+    breakMinutes,
+    ...meta
+  } = val || {};
+  const list = events ?? [];
+  const checkInFromEvents = list.find((e) => e.type === "CHECK_IN")?.at ?? null;
+  const checkOutFromEvents = [...list].reverse().find((e) => e.type === "CHECK_OUT")?.at ?? null;
+  const checkIn = checkInAt ?? checkInFromEvents;
+  const checkOut = checkOutAt ?? checkOutFromEvents;
+
   return {
     date_key: date_key || dateKey,
     employee_id: employee_id || employeeId,
-    events: events ?? [],
+    events: list,
+    check_in_at: checkIn ?? null,
+    check_out_at: checkOut ?? null,
+    net_work_minutes: Number(netWorkMinutes ?? 0),
+    remaining_work_minutes: Number(remainingWorkMinutes ?? 540),
+    work_target_minutes: Number(workTargetMinutes ?? 540),
+    expected_check_out_at: expectedCheckOutAt ?? null,
     metadata: {
       ...meta,
       ...(employeeName ? { employeeName } : {}),
       ...(department ? { department } : {}),
+      checkInAt: checkIn,
+      checkOutAt: checkOut,
+      netWorkMinutes: Number(netWorkMinutes ?? 0),
+      remainingWorkMinutes: Number(remainingWorkMinutes ?? 540),
+      workTargetMinutes: Number(workTargetMinutes ?? 540),
+      expectedCheckOutAt: expectedCheckOutAt ?? null,
+      lunchMinutes: Number(lunchMinutes ?? 0),
+      breakMinutes: Number(breakMinutes ?? 0),
     },
     updated_at: new Date().toISOString(),
   };
@@ -335,6 +370,14 @@ export async function loadStateFromTables() {
         dateKey: row.date_key,
         employeeId: row.employee_id,
         events: row.events ?? [],
+        checkInAt: row.check_in_at ?? row.metadata?.checkInAt ?? null,
+        checkOutAt: row.check_out_at ?? row.metadata?.checkOutAt ?? null,
+        netWorkMinutes: row.net_work_minutes ?? row.metadata?.netWorkMinutes ?? 0,
+        remainingWorkMinutes:
+          row.remaining_work_minutes ?? row.metadata?.remainingWorkMinutes ?? 540,
+        workTargetMinutes: row.work_target_minutes ?? row.metadata?.workTargetMinutes ?? 540,
+        expectedCheckOutAt:
+          row.expected_check_out_at ?? row.metadata?.expectedCheckOutAt ?? null,
         ...(row.metadata && typeof row.metadata === "object" ? row.metadata : {}),
       };
     }
@@ -496,7 +539,22 @@ export async function upsertAttendanceDay(day) {
 
   const key = `${day.dateKey}:${day.employeeId}`;
   const row = attendanceDayToRow(key, day);
-  await restUpsert(cfg, "hrms_attendance", [row], "date_key,employee_id");
+  try {
+    await restUpsert(cfg, "hrms_attendance", [row], "date_key,employee_id");
+  } catch (err) {
+    const msg = String(err?.message || err);
+    if (!msg.includes("column") && !msg.includes("check_in_at")) throw err;
+    const {
+      check_in_at,
+      check_out_at,
+      net_work_minutes,
+      remaining_work_minutes,
+      work_target_minutes,
+      expected_check_out_at,
+      ...legacy
+    } = row;
+    await restUpsert(cfg, "hrms_attendance", [legacy], "date_key,employee_id");
+  }
   return true;
 }
 

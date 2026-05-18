@@ -38,6 +38,12 @@ create table if not exists public.hrms_attendance (
   employee_id text not null references public.hrms_employees (id) on delete cascade,
   events jsonb not null default '[]'::jsonb,
   metadata jsonb not null default '{}'::jsonb,
+  check_in_at timestamptz,
+  check_out_at timestamptz,
+  net_work_minutes integer not null default 0,
+  remaining_work_minutes integer not null default 540,
+  work_target_minutes integer not null default 540,
+  expected_check_out_at timestamptz,
   updated_at timestamptz not null default now(),
   primary key (date_key, employee_id)
 );

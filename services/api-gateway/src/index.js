@@ -8,6 +8,10 @@ import { z } from "zod";
 import { requireAuth } from "./auth/jwt.js";
 import { employeesSeed, employeeShiftSeed } from "./employees-seed.js";
 import {
+  computeNetWorkMetrics,
+  enrichAttendanceDay,
+} from "./attendance-metrics.js";
+import {
   getStorageMode,
   loadPersistedState,
   persistAttendanceDay,
@@ -335,7 +339,7 @@ function scheduleSave() {
 
 function saveAttendanceDay(day) {
   scheduleSave();
-  if (day) void persistAttendanceDay(day);
+  if (day) void persistAttendanceDay(enrichAttendanceDay(day, workMinutesPerDay()));
 }
 
 function clearAttendanceDay(dateKey, employeeId) {
@@ -486,66 +490,15 @@ function workMinutesPerDay() {
 }
 
 /** Lunch/break minutes; open pairs count until `now`. */
-function sumPairMinutes(events, startType, endType, now = new Date()) {
-  const starts = events.filter((e) => e.type === startType).map((e) => new Date(e.at).getTime());
-  const ends = events.filter((e) => e.type === endType).map((e) => new Date(e.at).getTime());
-  const nowMs = now.getTime();
-  let acc = 0;
-  const paired = Math.min(starts.length, ends.length);
-  for (let i = 0; i < paired; i++) acc += Math.max(0, ends[i] - starts[i]);
-  if (starts.length > ends.length) {
-    acc += Math.max(0, nowMs - starts[starts.length - 1]);
-  }
-  return Math.floor(acc / 60000);
-}
-
-/** Net work from check-in (9h target excludes lunch/break). */
-function computeNetWorkMetrics(events, now = new Date()) {
-  const list = events ?? [];
-  const checkInAt = list.find((e) => e.type === "CHECK_IN")?.at ?? null;
-  if (!checkInAt) {
-    return {
-      checkInAt: null,
-      checkOutAt: null,
-      netWorkMinutes: 0,
-      lunchMinutes: 0,
-      breakMinutes: 0,
-      workTargetMinutes: workMinutesPerDay(),
-      remainingWorkMinutes: workMinutesPerDay(),
-      expectedCheckOutAt: null,
-    };
-  }
-
-  const checkOutAt = [...list].reverse().find((e) => e.type === "CHECK_OUT")?.at ?? null;
-  const endMs = checkOutAt ? new Date(checkOutAt).getTime() : now.getTime();
-  const sessionMinutes = Math.max(0, Math.floor((endMs - new Date(checkInAt).getTime()) / 60000));
-  const lunchMinutes = sumPairMinutes(list, "LUNCH_IN", "LUNCH_OUT", now);
-  const breakMinutes = sumPairMinutes(list, "BREAK_IN", "BREAK_OUT", now);
-  const netWorkMinutes = Math.max(0, sessionMinutes - lunchMinutes - breakMinutes);
-  const workTargetMinutes = workMinutesPerDay();
-  const remainingWorkMinutes = Math.max(0, workTargetMinutes - netWorkMinutes);
-  const expectedCheckOutAt = new Date(
-    new Date(checkInAt).getTime() +
-      (workTargetMinutes + lunchMinutes + breakMinutes) * 60 * 1000
-  ).toISOString();
-
-  return {
-    checkInAt,
-    checkOutAt,
-    netWorkMinutes,
-    lunchMinutes,
-    breakMinutes,
-    workTargetMinutes,
-    remainingWorkMinutes,
-    expectedCheckOutAt,
-  };
+function computeNetWorkMetricsForDay(events, now = new Date()) {
+  return computeNetWorkMetrics(events, workMinutesPerDay(), now);
 }
 
 function computeLateAndOvertime(day, shift) {
   const lateThreshold = Math.max(0, Number(orgSettings?.lateThresholdMinutes ?? 10));
   const workMinutes = workMinutesPerDay();
   const events = day?.events ?? [];
-  const metrics = computeNetWorkMetrics(events);
+  const metrics = computeNetWorkMetrics(events, workMinutes);
   const checkInAt = metrics.checkInAt;
 
   let lateMinutes = 0;
@@ -572,7 +525,7 @@ function computeLateAndOvertime(day, shift) {
 }
 
 function attendanceMetricsPayload(day) {
-  const metrics = computeNetWorkMetrics(day?.events ?? []);
+  const metrics = computeNetWorkMetricsForDay(day?.events ?? []);
   return {
     workHoursPerDay: workMinutesPerDay() / 60,
     ...metrics,
