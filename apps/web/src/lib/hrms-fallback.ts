@@ -103,6 +103,19 @@ export function hrmsFallbackResponse(
     if (parts[1] === "payslips" && parts[2] === "mine") return json({ payslips: [] });
   }
 
+  if (method === "POST" && root === "ai" && parts[1] === "insights") {
+    return json({
+      ok: true,
+      sample_size: 50,
+      insights: [
+        "Break durations trending higher after 3 PM — suggest smart reminders.",
+        "Late arrival spike on Mondays — consider flexible shift policy.",
+        "High productivity cluster in Engineering — replicate workflow templates.",
+      ],
+      fallback: true,
+    });
+  }
+
   if (method === "GET" && root === "admin") {
     if (parts[1] === "attendance" && parts[2] === "metrics") {
       return json({ late: 0, overtime: 0, online: 0, total: employees.length });

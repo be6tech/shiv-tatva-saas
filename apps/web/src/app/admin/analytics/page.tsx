@@ -65,7 +65,20 @@ export default function AdminAnalyticsPage() {
       body: JSON.stringify({ department: "Engineering", sample_size: 50 }),
     })
       .then((r) => setInsights(r.insights ?? []))
-      .catch((e) => setError(e instanceof Error ? e.message : "Failed to load insights"))
+      .catch((e) => {
+        const msg = e instanceof Error ? e.message : "Failed to load insights";
+        if (msg.includes("gateway_required") || msg.includes("gateway_not_configured")) {
+          setError(
+            "HRMS API is not linked. Set API_GATEWAY_URL on Vercel to your Render gateway URL."
+          );
+        } else if (msg.includes("gateway_unreachable")) {
+          setError("Cannot reach the API gateway. Check that Render is deployed and awake.");
+        } else if (msg.includes("ai_service_unavailable")) {
+          setError("AI service offline — showing default insights when available.");
+        } else {
+          setError(msg);
+        }
+      })
       .finally(() => setLoading(false));
   }, [auth.hydrated, auth.token]);
 
@@ -295,7 +308,7 @@ export default function AdminAnalyticsPage() {
           <div className="mt-4 space-y-3">
             {error ? (
               <div className="rounded-3xl bg-red-500/10 ring-1 ring-red-500/20 p-4 text-sm text-red-200/90">
-                {error} (Start FastAPI AI service on port 8001)
+                {error}
               </div>
             ) : null}
             {loading ? (
