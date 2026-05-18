@@ -31,6 +31,34 @@ async function restGet(cfg, table, query = "") {
   return res.json();
 }
 
+/** Attendance map keys are `YYYY-MM-DD:employeeId` (date contains colons). */
+function parseAttendanceStoreKey(key, val) {
+  const match = String(key).match(/^(\d{4}-\d{2}-\d{2}):(.+)$/);
+  if (match) {
+    return { date_key: match[1], employee_id: match[2] };
+  }
+  return {
+    date_key: val?.dateKey ?? val?.date_key ?? "",
+    employee_id: val?.employeeId ?? val?.employee_id ?? "",
+  };
+}
+
+function attendanceDayToRow(key, val) {
+  const { date_key, employee_id } = parseAttendanceStoreKey(key, val);
+  const { events, dateKey, employeeId, employeeName, department, ...meta } = val || {};
+  return {
+    date_key: date_key || dateKey,
+    employee_id: employee_id || employeeId,
+    events: events ?? [],
+    metadata: {
+      ...meta,
+      ...(employeeName ? { employeeName } : {}),
+      ...(department ? { department } : {}),
+    },
+    updated_at: new Date().toISOString(),
+  };
+}
+
 async function restUpsert(cfg, table, rows, onConflict) {
   if (!rows.length) return;
   const conflict = onConflict ? `?on_conflict=${encodeURIComponent(onConflict)}` : "";
@@ -378,19 +406,7 @@ export async function saveStateToTables(snapshot) {
       ? Object.entries(snapshot.attendance)
       : [];
   if (attendanceEntries.length) {
-    const attRows = attendanceEntries.map(([key, val]) => {
-      const [date_key, employee_id] = key.includes(":")
-        ? key.split(":")
-        : [val?.dateKey, val?.employeeId];
-      const { events, dateKey, employeeId, ...meta } = val || {};
-      return {
-        date_key: date_key || dateKey,
-        employee_id: employee_id || employeeId,
-        events: events ?? [],
-        metadata: meta,
-        updated_at: new Date().toISOString(),
-      };
-    });
+    const attRows = attendanceEntries.map(([key, val]) => attendanceDayToRow(key, val));
     await restUpsert(cfg, "hrms_attendance", attRows, "date_key,employee_id");
   }
 
@@ -446,6 +462,42 @@ export async function saveStateToTables(snapshot) {
   if (flagRows.length) {
     await restUpsert(cfg, "hrms_anomaly_flags", flagRows, "flag_key");
   }
+}
+
+export async function deleteAttendanceDay(dateKey, employeeId) {
+  const cfg = supabaseConfig();
+  if (!cfg || !dateKey || !employeeId) return false;
+  const url = `${cfg.base}/rest/v1/hrms_attendance?date_key=eq.${encodeURIComponent(dateKey)}&employee_id=eq.${encodeURIComponent(employeeId)}`;
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: headers(cfg.key, { Prefer: "return=minimal" }),
+  });
+  if (!res.ok && res.status !== 404) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`hrms_attendance DELETE failed (${res.status}): ${text.slice(0, 200)}`);
+  }
+  return true;
+}
+
+/** Write one attendance day immediately (check-in/out) to Supabase tables. */
+export async function upsertAttendanceDay(day) {
+  const cfg = supabaseConfig();
+  if (!cfg || !day?.employeeId || !day?.dateKey) return false;
+
+  const empRow = employeeToRow({
+    id: day.employeeId,
+    name: day.employeeName ?? "Employee",
+    department: day.department ?? "",
+    designation: "",
+    status: "Active",
+    email: "",
+  });
+  await restUpsert(cfg, "hrms_employees", [empRow], "id");
+
+  const key = `${day.dateKey}:${day.employeeId}`;
+  const row = attendanceDayToRow(key, day);
+  await restUpsert(cfg, "hrms_attendance", [row], "date_key,employee_id");
+  return true;
 }
 
 export function useRelationalTables() {

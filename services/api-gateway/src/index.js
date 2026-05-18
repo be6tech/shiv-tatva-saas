@@ -7,7 +7,13 @@ import jwt from "jsonwebtoken";
 import { z } from "zod";
 import { requireAuth } from "./auth/jwt.js";
 import { employeesSeed, employeeShiftSeed } from "./employees-seed.js";
-import { getStorageMode, loadPersistedState, schedulePersist } from "./persist.js";
+import {
+  getStorageMode,
+  loadPersistedState,
+  persistAttendanceDay,
+  removeAttendanceDay,
+  schedulePersist,
+} from "./persist.js";
 
 const app = express();
 app.use(helmet());
@@ -327,6 +333,16 @@ function scheduleSave() {
   schedulePersist(getHrmsSnapshot);
 }
 
+function saveAttendanceDay(day) {
+  scheduleSave();
+  if (day) void persistAttendanceDay(day);
+}
+
+function clearAttendanceDay(dateKey, employeeId) {
+  scheduleSave();
+  void removeAttendanceDay(dateKey, employeeId);
+}
+
 function mergeEmployeesFromDb(persisted) {
   if (!Array.isArray(persisted) || persisted.length === 0) return [...employeesSeed];
   const onlyDemo =
@@ -637,7 +653,7 @@ app.post(
       events: [...day.events, { type: parsed.data.type, at: new Date().toISOString() }],
     };
     attendanceStore.set(k, next);
-    scheduleSave();
+    saveAttendanceDay(next);
     res.json({
       day: next,
       allowed: nextAllowedFromEvents(next.events),
@@ -661,7 +677,7 @@ app.post(
     const events = day.events.slice(0, -1);
     if (events.length === 0) {
       attendanceStore.delete(k);
-      scheduleSave();
+      clearAttendanceDay(dateKey, employeeId);
       const shiftId = employeeShift.get(employeeId) || "morning";
       const shift = shiftTypes.find((s) => s.id === shiftId) || shiftTypes[0];
       return res.json({
@@ -673,7 +689,7 @@ app.post(
     }
     const next = { ...day, events };
     attendanceStore.set(k, next);
-    scheduleSave();
+    saveAttendanceDay(next);
     res.json({
       day: next,
       allowed: nextAllowedFromEvents(next.events),
@@ -704,7 +720,7 @@ app.post(
     const events = day.events.filter((_, i) => i !== idx);
     if (events.length === 0) {
       attendanceStore.delete(k);
-      scheduleSave();
+      clearAttendanceDay(dateKey, employeeId);
       return res.json({
         day: null,
         allowed: nextAllowedFromEvents([]),
@@ -713,7 +729,7 @@ app.post(
     }
     const next = { ...day, events };
     attendanceStore.set(k, next);
-    scheduleSave();
+    saveAttendanceDay(next);
     res.json({
       day: next,
       allowed: nextAllowedFromEvents(next.events),
@@ -729,7 +745,7 @@ app.post(
     const dateKey = new Date().toISOString().slice(0, 10);
     const employeeId = String(req.user?.sub || "");
     attendanceStore.delete(attendanceKey(dateKey, employeeId));
-    scheduleSave();
+    clearAttendanceDay(dateKey, employeeId);
     res.json({ ok: true });
   }
 );

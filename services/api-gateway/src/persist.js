@@ -4,6 +4,8 @@ import { fileURLToPath } from "node:url";
 import {
   loadStateFromTables,
   saveStateToTables,
+  deleteAttendanceDay,
+  upsertAttendanceDay,
   useRelationalTables,
 } from "./supabase-tables.js";
 
@@ -173,6 +175,33 @@ export async function seedSupabaseTablesFromObject(payload) {
     throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required");
   }
   await saveStateToTables(payload);
+}
+
+/** Persist one attendance day to hrms_attendance immediately (full snapshot still debounced). */
+export async function persistAttendanceDay(day) {
+  if (!supabaseConfig() || !useRelationalTables()) return false;
+  try {
+    if (!day) return false;
+    await upsertAttendanceDay(day);
+    storageMode = "supabase-tables";
+    return true;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn("[api-gateway] attendance table upsert failed:", err?.message || err);
+    return false;
+  }
+}
+
+export async function removeAttendanceDay(dateKey, employeeId) {
+  if (!supabaseConfig() || !useRelationalTables()) return false;
+  try {
+    await deleteAttendanceDay(dateKey, employeeId);
+    return true;
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.warn("[api-gateway] attendance table delete failed:", err?.message || err);
+    return false;
+  }
 }
 
 export { DATA_PATH };
