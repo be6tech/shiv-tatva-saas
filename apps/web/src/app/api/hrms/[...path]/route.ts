@@ -70,6 +70,17 @@ async function proxy(req: NextRequest, pathParts: string[]) {
   }
 
   const body = await upstream.text();
+  if (upstream.status === 401) {
+    let hint =
+      "HRMS token rejected. Set JWT_SECRET on Vercel and Render to the same value, then redeploy both.";
+    try {
+      const parsed = JSON.parse(body) as { hint?: string };
+      if (parsed.hint) hint = parsed.hint;
+    } catch {
+      // keep default hint
+    }
+    return NextResponse.json({ error: "invalid_token", hint }, { status: 401 });
+  }
   return new NextResponse(body, {
     status: upstream.status,
     headers: {

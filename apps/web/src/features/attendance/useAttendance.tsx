@@ -126,6 +126,13 @@ export function useAttendance(params: {
               );
               return;
             }
+            if (code === "invalid_token") {
+              setApiError(
+                data?.hint ??
+                  "Session token rejected by HRMS API. Set the same JWT_SECRET on Vercel and Render, then log out and log in again."
+              );
+              return;
+            }
           }
           setApiError(e instanceof Error ? e.message : "Attendance update failed");
         });

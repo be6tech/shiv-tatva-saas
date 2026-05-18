@@ -20,8 +20,12 @@ export function requireAuth(options = {}) {
         if (!roles.includes(role)) return res.status(403).json({ error: "forbidden" });
       }
       return next();
-    } catch (e) {
-      return res.status(401).json({ error: "invalid_token" });
+    } catch {
+      return res.status(401).json({
+        error: "invalid_token",
+        hint:
+          "Set JWT_SECRET on Render to the same value as Vercel (apps/web). Redeploy both after changing.",
+      });
     }
   };
 }

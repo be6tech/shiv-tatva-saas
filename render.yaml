@@ -10,8 +10,9 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      # Must match Vercel JWT_SECRET exactly (do not use generateValue).
       - key: JWT_SECRET
-        generateValue: true
+        sync: false
       - key: PORT
         value: 4000
       # Same Supabase project as Vercel (copy from Vercel env). Run apps/web/supabase/hrms_store.sql first.

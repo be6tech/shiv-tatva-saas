@@ -121,10 +121,6 @@ export default function EmployeeAttendancePage() {
                     {attendance.apiError}
                   </div>
                 ) : null}
-                <div className="mt-3 text-xs text-slate-300/70">
-                  Check in anytime after you log in. Your {workHours}-hour work day is counted from
-                  check-in (lunch and breaks are excluded from net work).
-                </div>
                 {checkInAt && status !== "Checked Out" ? (
                   <div className="mt-2 text-xs text-slate-300/80">
                     Target: {workHours}h net work • Remaining: {msToHhMm(d.remainingWorkMs)}
