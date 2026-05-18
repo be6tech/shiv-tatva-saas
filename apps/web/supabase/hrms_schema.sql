@@ -182,7 +182,7 @@ values (
     "supportEmail": "support@shivtatva.com",
     "supportPhone": "+91 90000 00000",
     "locationText": "Cohort Coworking Space, 1st Floor, Kondapur, Hyderabad",
-    "workHoursPerDay": 8,
+    "workHoursPerDay": 9,
     "lateThresholdMinutes": 10,
     "anomalySpikeRatio": 0.4
   }'::jsonb

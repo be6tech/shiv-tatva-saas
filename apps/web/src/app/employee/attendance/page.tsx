@@ -58,8 +58,16 @@ export default function EmployeeAttendancePage() {
   const [editMode, setEditMode] = React.useState(false);
   const events = attendance.day?.events ?? [];
   const status = statusFromEvents(events);
-  const d = computeDurations(events);
+  const workHours =
+    attendance.metrics?.workHoursPerDay ??
+    (attendance.metrics?.workTargetMinutes
+      ? attendance.metrics.workTargetMinutes / 60
+      : 9);
+  const d = computeDurations(events, now, workHours);
   const lastEvent = events[events.length - 1];
+  const checkInAt = events.find((e) => e.type === "CHECK_IN")?.at;
+  const expectedOut =
+    attendance.metrics?.expectedCheckOutAt ?? d.expectedCheckOutAt;
 
   return (
     <DashboardShell role="employee" title="Attendance">
@@ -110,14 +118,26 @@ export default function EmployeeAttendancePage() {
                 </div>
                 {attendance.apiError ? (
                   <div className="mt-3 text-xs text-red-200/90">
-                    {attendance.apiErrorCode === "outside_shift_window"
-                      ? "Check-in is only allowed during your shift window (from 1 hour before start until shift end)."
-                      : attendance.apiError}
+                    {attendance.apiError}
                   </div>
                 ) : null}
-                {auth.role === "admin" ? (
-                  <div className="mt-3 text-xs text-slate-300/70">
-                    Admin override: you can force Check In even outside shift window.
+                <div className="mt-3 text-xs text-slate-300/70">
+                  Check in anytime after you log in. Your {workHours}-hour work day is counted from
+                  check-in (lunch and breaks are excluded from net work).
+                </div>
+                {checkInAt && status !== "Checked Out" ? (
+                  <div className="mt-2 text-xs text-slate-300/80">
+                    Target: {workHours}h net work • Remaining: {msToHhMm(d.remainingWorkMs)}
+                    {expectedOut ? (
+                      <>
+                        {" "}
+                        • Expected check-out:{" "}
+                        {new Date(expectedOut).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </>
+                    ) : null}
                   </div>
                 ) : null}
               </div>
@@ -125,7 +145,7 @@ export default function EmployeeAttendancePage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div className={cn(marketingSurface, "p-4")}>
                   <div className="flex items-center justify-between">
-                    <div className="text-xs text-slate-300/70">Net Work</div>
+                    <div className="text-xs text-slate-300/70">Net Work / {workHours}h</div>
                     <Timer className="h-4 w-4 text-[#f97316]" />
                   </div>
                   <div className="mt-1 text-sm font-semibold">
@@ -227,13 +247,6 @@ export default function EmployeeAttendancePage() {
               </div>
             ) : null}
 
-            {auth.role === "admin" &&
-            attendance.source === "api" &&
-            attendance.apiErrorCode === "outside_shift_window" ? (
-              <div className="mt-3 text-xs text-slate-300/80">
-                The server blocked check-in due to shift window. Use override if required.
-              </div>
-            ) : null}
           </div>
 
           <div className={cn(marketingSurface, "p-6")}>

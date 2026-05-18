@@ -31,35 +31,61 @@ export function statusFromEvents(events: AttendanceDay["events"]): AttendanceSta
   return "Working";
 }
 
-export function computeDurations(events: AttendanceDay["events"]) {
+function sumPairMs(
+  events: AttendanceDay["events"],
+  startType: AttendanceEventType,
+  endType: AttendanceEventType,
+  nowMs: number
+) {
   const toMs = (iso: string) => new Date(iso).getTime();
-  let lunchMs = 0;
-  let breakMs = 0;
-
-  const pairs: Array<[AttendanceEventType, AttendanceEventType, "work" | "lunch" | "break"]> = [
-    ["CHECK_IN", "CHECK_OUT", "work"],
-    ["LUNCH_IN", "LUNCH_OUT", "lunch"],
-    ["BREAK_IN", "BREAK_OUT", "break"],
-  ];
-
-  for (const [startType, endType, bucket] of pairs) {
-    const starts = events.filter((e) => e.type === startType).map((e) => toMs(e.at));
-    const ends = events.filter((e) => e.type === endType).map((e) => toMs(e.at));
-    const len = Math.min(starts.length, ends.length);
-    for (let i = 0; i < len; i++) {
-      const delta = Math.max(0, ends[i] - starts[i]);
-      if (bucket === "lunch") lunchMs += delta;
-      if (bucket === "break") breakMs += delta;
-    }
+  const starts = events.filter((e) => e.type === startType).map((e) => toMs(e.at));
+  const ends = events.filter((e) => e.type === endType).map((e) => toMs(e.at));
+  let acc = 0;
+  const paired = Math.min(starts.length, ends.length);
+  for (let i = 0; i < paired; i++) acc += Math.max(0, ends[i] - starts[i]);
+  if (starts.length > ends.length) {
+    acc += Math.max(0, nowMs - starts[starts.length - 1]);
   }
+  return acc;
+}
 
-  // Net working time = total session - lunch - breaks
+export const DEFAULT_WORK_HOURS_PER_DAY = 9;
+
+function toMs(iso: string) {
+  return new Date(iso).getTime();
+}
+
+export function computeDurations(
+  events: AttendanceDay["events"],
+  now: Date = new Date(),
+  workHoursPerDay = DEFAULT_WORK_HOURS_PER_DAY
+) {
+  const nowMs = now.getTime();
+  const lunchMs = sumPairMs(events, "LUNCH_IN", "LUNCH_OUT", nowMs);
+  const breakMs = sumPairMs(events, "BREAK_IN", "BREAK_OUT", nowMs);
+
   const checkIn = events.find((e) => e.type === "CHECK_IN")?.at;
   const checkOut = [...events].reverse().find((e) => e.type === "CHECK_OUT")?.at;
-  const sessionMs = checkIn && checkOut ? Math.max(0, toMs(checkOut) - toMs(checkIn)) : 0;
+  const sessionMs =
+    checkIn ? Math.max(0, (checkOut ? toMs(checkOut) : nowMs) - toMs(checkIn)) : 0;
   const netWorkMs = Math.max(0, sessionMs - lunchMs - breakMs);
+  const workTargetMs = workHoursPerDay * 60 * 60 * 1000;
+  const remainingWorkMs = Math.max(0, workTargetMs - netWorkMs);
+  const expectedCheckOutAt =
+    checkIn && !checkOut
+      ? new Date(toMs(checkIn) + workTargetMs + lunchMs + breakMs).toISOString()
+      : null;
 
-  return { sessionMs, netWorkMs, lunchMs, breakMs };
+  return {
+    sessionMs,
+    netWorkMs,
+    lunchMs,
+    breakMs,
+    workTargetMs,
+    remainingWorkMs,
+    expectedCheckOutAt,
+    workHoursPerDay,
+  };
 }
 
 export function msToHhMm(ms: number) {

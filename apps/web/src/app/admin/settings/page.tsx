@@ -28,7 +28,7 @@ export default function AdminSettingsPage() {
   const [supportEmail, setSupportEmail] = React.useState("");
   const [supportPhone, setSupportPhone] = React.useState("");
   const [locationText, setLocationText] = React.useState("");
-  const [workHoursPerDay, setWorkHoursPerDay] = React.useState(8);
+  const [workHoursPerDay, setWorkHoursPerDay] = React.useState(9);
   const [lateThresholdMinutes, setLateThresholdMinutes] = React.useState(10);
   const [anomalySpikeRatio, setAnomalySpikeRatio] = React.useState(0.4);
 
@@ -44,7 +44,7 @@ export default function AdminSettingsPage() {
         setSupportEmail(r.settings.supportEmail ?? "");
         setSupportPhone(r.settings.supportPhone ?? "");
         setLocationText(r.settings.locationText ?? "");
-        setWorkHoursPerDay(Number(r.settings.workHoursPerDay ?? 8));
+        setWorkHoursPerDay(Number(r.settings.workHoursPerDay ?? 9));
         setLateThresholdMinutes(Number(r.settings.lateThresholdMinutes ?? 10));
         setAnomalySpikeRatio(Number(r.settings.anomalySpikeRatio ?? 0.4));
       })

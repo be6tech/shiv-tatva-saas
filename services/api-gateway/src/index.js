@@ -380,7 +380,7 @@ let orgSettings = {
   supportEmail: "support@shivtatva.com",
   supportPhone: "+91 90000 00000",
   locationText: "Cohort Coworking Space, 1st Floor, Kondapur, Hyderabad",
-  workHoursPerDay: 8,
+  workHoursPerDay: 9,
   lateThresholdMinutes: 10,
   anomalySpikeRatio: 0.4,
 };
@@ -464,42 +464,73 @@ function parseHmToMinutes(hm) {
   return h * 60 + m;
 }
 
-/** Check-in allowed from 1h before shift start until shift end (same calendar day). */
-function checkInWindowMinutes(shift) {
-  const startMin = parseHmToMinutes(shift?.start);
-  if (startMin == null || shift?.start === "Flexible") return null;
-  const endMin = parseHmToMinutes(shift?.end);
-  const minAllowed = startMin - 60;
-  // Until shift end for day shifts; night shifts (end < start) allow until end + 2h grace.
-  let maxAllowed = startMin + 180;
-  if (endMin != null) {
-    maxAllowed = endMin > startMin ? endMin : endMin + 24 * 60 + 120;
-  }
-  return { minAllowed, maxAllowed };
+function workMinutesPerDay() {
+  const workHours = Math.max(1, Math.min(24, Number(orgSettings?.workHoursPerDay ?? 9)));
+  return workHours * 60;
 }
 
-function isWithinCheckInWindow(shift, now = new Date()) {
-  const window = checkInWindowMinutes(shift);
-  if (!window) return true;
-  const nowMin = now.getHours() * 60 + now.getMinutes();
-  const { minAllowed, maxAllowed } = window;
-  if (maxAllowed > 24 * 60) {
-    // Night shift spanning midnight: allow if after min or before end+grace on clock.
-    const endMin = parseHmToMinutes(shift.end);
-    const graceEnd = (endMin ?? 0) + 120;
-    return nowMin >= minAllowed || nowMin <= graceEnd;
+/** Lunch/break minutes; open pairs count until `now`. */
+function sumPairMinutes(events, startType, endType, now = new Date()) {
+  const starts = events.filter((e) => e.type === startType).map((e) => new Date(e.at).getTime());
+  const ends = events.filter((e) => e.type === endType).map((e) => new Date(e.at).getTime());
+  const nowMs = now.getTime();
+  let acc = 0;
+  const paired = Math.min(starts.length, ends.length);
+  for (let i = 0; i < paired; i++) acc += Math.max(0, ends[i] - starts[i]);
+  if (starts.length > ends.length) {
+    acc += Math.max(0, nowMs - starts[starts.length - 1]);
   }
-  return nowMin >= minAllowed && nowMin <= maxAllowed;
+  return Math.floor(acc / 60000);
+}
+
+/** Net work from check-in (9h target excludes lunch/break). */
+function computeNetWorkMetrics(events, now = new Date()) {
+  const list = events ?? [];
+  const checkInAt = list.find((e) => e.type === "CHECK_IN")?.at ?? null;
+  if (!checkInAt) {
+    return {
+      checkInAt: null,
+      checkOutAt: null,
+      netWorkMinutes: 0,
+      lunchMinutes: 0,
+      breakMinutes: 0,
+      workTargetMinutes: workMinutesPerDay(),
+      remainingWorkMinutes: workMinutesPerDay(),
+      expectedCheckOutAt: null,
+    };
+  }
+
+  const checkOutAt = [...list].reverse().find((e) => e.type === "CHECK_OUT")?.at ?? null;
+  const endMs = checkOutAt ? new Date(checkOutAt).getTime() : now.getTime();
+  const sessionMinutes = Math.max(0, Math.floor((endMs - new Date(checkInAt).getTime()) / 60000));
+  const lunchMinutes = sumPairMinutes(list, "LUNCH_IN", "LUNCH_OUT", now);
+  const breakMinutes = sumPairMinutes(list, "BREAK_IN", "BREAK_OUT", now);
+  const netWorkMinutes = Math.max(0, sessionMinutes - lunchMinutes - breakMinutes);
+  const workTargetMinutes = workMinutesPerDay();
+  const remainingWorkMinutes = Math.max(0, workTargetMinutes - netWorkMinutes);
+  const expectedCheckOutAt = new Date(
+    new Date(checkInAt).getTime() +
+      (workTargetMinutes + lunchMinutes + breakMinutes) * 60 * 1000
+  ).toISOString();
+
+  return {
+    checkInAt,
+    checkOutAt,
+    netWorkMinutes,
+    lunchMinutes,
+    breakMinutes,
+    workTargetMinutes,
+    remainingWorkMinutes,
+    expectedCheckOutAt,
+  };
 }
 
 function computeLateAndOvertime(day, shift) {
-  const workHours = Math.max(1, Math.min(24, Number(orgSettings?.workHoursPerDay ?? 8)));
-  const workMinutes = workHours * 60;
   const lateThreshold = Math.max(0, Number(orgSettings?.lateThresholdMinutes ?? 10));
-
+  const workMinutes = workMinutesPerDay();
   const events = day?.events ?? [];
-  const checkInAt = events.find((e) => e.type === "CHECK_IN")?.at ?? null;
-  const checkOutAt = [...events].reverse().find((e) => e.type === "CHECK_OUT")?.at ?? null;
+  const metrics = computeNetWorkMetrics(events);
+  const checkInAt = metrics.checkInAt;
 
   let lateMinutes = 0;
   if (checkInAt && shift?.start && shift.start !== "Flexible") {
@@ -511,28 +542,24 @@ function computeLateAndOvertime(day, shift) {
     }
   }
 
-  let overtimeMinutes = 0;
-  if (checkInAt && checkOutAt) {
-    const ms = Math.max(0, new Date(checkOutAt).getTime() - new Date(checkInAt).getTime());
-    const totalMin = Math.floor(ms / 60000);
-    const sumPairsMin = (startType, endType) => {
-      const starts = events.filter((e) => e.type === startType).map((e) => new Date(e.at).getTime());
-      const ends = events.filter((e) => e.type === endType).map((e) => new Date(e.at).getTime());
-      const len = Math.min(starts.length, ends.length);
-      let acc = 0;
-      for (let i = 0; i < len; i++) acc += Math.max(0, ends[i] - starts[i]);
-      return Math.floor(acc / 60000);
-    };
-    const lunchMin = sumPairsMin("LUNCH_IN", "LUNCH_OUT");
-    const breakMin = sumPairsMin("BREAK_IN", "BREAK_OUT");
-    const netMin = Math.max(0, totalMin - lunchMin - breakMin);
-    overtimeMinutes = Math.max(0, netMin - workMinutes);
-  }
+  const overtimeMinutes =
+    metrics.checkOutAt && checkInAt
+      ? Math.max(0, metrics.netWorkMinutes - workMinutes)
+      : 0;
 
   return {
     late: lateMinutes >= lateThreshold,
     lateMinutes,
     overtimeMinutes,
+    ...metrics,
+  };
+}
+
+function attendanceMetricsPayload(day) {
+  const metrics = computeNetWorkMetrics(day?.events ?? []);
+  return {
+    workHoursPerDay: workMinutesPerDay() / 60,
+    ...metrics,
   };
 }
 
@@ -558,7 +585,13 @@ app.get(
     const shift = shiftTypes.find((s) => s.id === shiftId) || shiftTypes[0];
     const allowed = nextAllowedFromEvents(day?.events ?? []);
     const status = statusFromEvents(day?.events ?? []);
-    res.json({ day, shift, allowed, status });
+    res.json({
+      day,
+      shift,
+      allowed,
+      status,
+      metrics: attendanceMetricsPayload(day),
+    });
   }
 );
 
@@ -598,27 +631,7 @@ app.post(
       });
     }
 
-    // Shift-based validation (non-flex): restrict CHECK_IN to a window around shift start.
-    // Admin can override via query ?override=true.
-    if (parsed.data.type === "CHECK_IN") {
-      const shiftId = employeeShift.get(employeeId) || "morning";
-      const shift = shiftTypes.find((s) => s.id === shiftId) || shiftTypes[0];
-      const override = req.query?.override === "true";
-      if (
-        shift?.start &&
-        shift.start !== "Flexible" &&
-        !(req.user?.role === "admin" && override)
-      ) {
-        if (!isWithinCheckInWindow(shift)) {
-          return res.status(400).json({
-            error: "outside_shift_window",
-            shift,
-            window: checkInWindowMinutes(shift),
-          });
-        }
-      }
-    }
-
+    // Check-in allowed any time after portal login (same calendar day); 9h net work counts from check-in.
     const next = {
       ...day,
       events: [...day.events, { type: parsed.data.type, at: new Date().toISOString() }],
@@ -629,6 +642,7 @@ app.post(
       day: next,
       allowed: nextAllowedFromEvents(next.events),
       status: statusFromEvents(next.events),
+      metrics: attendanceMetricsPayload(next),
     });
   }
 );

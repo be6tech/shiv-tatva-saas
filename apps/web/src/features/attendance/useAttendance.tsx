@@ -16,6 +16,17 @@ type ShiftInfo = {
   end: string;
 };
 
+export type AttendanceMetrics = {
+  workHoursPerDay?: number;
+  netWorkMinutes?: number;
+  lunchMinutes?: number;
+  breakMinutes?: number;
+  workTargetMinutes?: number;
+  remainingWorkMinutes?: number;
+  expectedCheckOutAt?: string | null;
+  checkInAt?: string | null;
+};
+
 type StoreShape = Record<string, AttendanceDay>; // `${dateKey}:${employeeId}`
 
 function loadStore(): StoreShape {
@@ -49,6 +60,7 @@ export function useAttendance(params: {
     null
   );
   const [apiStatus, setApiStatus] = React.useState<string | null>(null);
+  const [apiMetrics, setApiMetrics] = React.useState<AttendanceMetrics | null>(null);
   const [apiError, setApiError] = React.useState<string | null>(null);
   const [apiErrorCode, setApiErrorCode] = React.useState<string | null>(null);
   const useApi = auth.hydrated && !!auth.token;
@@ -63,12 +75,14 @@ export function useAttendance(params: {
       shift?: ShiftInfo;
       allowed?: AttendanceEventType[];
       status?: string;
+      metrics?: AttendanceMetrics;
     }>("/attendance/today", { token: auth.token })
       .then((r) => {
         setApiDay(r.day);
         setApiShift(r.shift ?? null);
         setApiAllowed(r.allowed ?? null);
         setApiStatus(r.status ?? null);
+        setApiMetrics(r.metrics ?? null);
         setApiError(null);
       })
       .catch(() => {
@@ -82,15 +96,22 @@ export function useAttendance(params: {
   const addEvent = (type: AttendanceEventType) => {
     if (useApi) {
       setApiError(null);
-      apiFetch<{ day: AttendanceDay }>("/attendance/event", {
+      apiFetch<{ day: AttendanceDay; metrics?: AttendanceMetrics }>("/attendance/event", {
         method: "POST",
         token: auth.token,
         body: JSON.stringify({ type }),
       })
-        .then((r: { day: AttendanceDay; allowed?: AttendanceEventType[]; status?: string }) => {
+        .then(
+          (r: {
+            day: AttendanceDay;
+            allowed?: AttendanceEventType[];
+            status?: string;
+            metrics?: AttendanceMetrics;
+          }) => {
           setApiDay(r.day);
           setApiAllowed(r.allowed ?? null);
           setApiStatus(r.status ?? null);
+          setApiMetrics(r.metrics ?? null);
           setApiErrorCode(null);
         })
         .catch((e) => {
@@ -132,18 +153,21 @@ export function useAttendance(params: {
   const addEventOverride = (type: AttendanceEventType) => {
     if (!useApi) return;
     setApiError(null);
-    apiFetch<{ day: AttendanceDay; allowed?: AttendanceEventType[]; status?: string }>(
-      `/attendance/event?override=true`,
-      {
-        method: "POST",
-        token: auth.token,
-        body: JSON.stringify({ type }),
-      }
-    )
+    apiFetch<{
+      day: AttendanceDay;
+      allowed?: AttendanceEventType[];
+      status?: string;
+      metrics?: AttendanceMetrics;
+    }>(`/attendance/event?override=true`, {
+      method: "POST",
+      token: auth.token,
+      body: JSON.stringify({ type }),
+    })
       .then((r) => {
         setApiDay(r.day);
         setApiAllowed(r.allowed ?? null);
         setApiStatus(r.status ?? null);
+        setApiMetrics(r.metrics ?? null);
         setApiErrorCode(null);
       })
       .catch((e) => {
@@ -251,12 +275,14 @@ export function useAttendance(params: {
       shift?: ShiftInfo;
       allowed?: AttendanceEventType[];
       status?: string;
+      metrics?: AttendanceMetrics;
     }>("/attendance/today", { token: auth.token })
       .then((r) => {
         setApiDay(r.day);
         setApiShift(r.shift ?? null);
         setApiAllowed(r.allowed ?? null);
         setApiStatus(r.status ?? null);
+        setApiMetrics(r.metrics ?? null);
       })
       .catch(() => {});
   };
@@ -273,6 +299,7 @@ export function useAttendance(params: {
     source: useApi ? ("api" as const) : ("local" as const),
     shift: useApi ? apiShift : null,
     status: useApi ? apiStatus : null,
+    metrics: useApi ? apiMetrics : null,
     apiError,
     apiErrorCode,
   };
