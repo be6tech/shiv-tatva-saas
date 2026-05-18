@@ -268,10 +268,8 @@ export default function EmployeeAttendancePage() {
                         {labels[e.type as keyof typeof labels]}
                       </div>
                       <div className="text-xs text-slate-300/70">
-                        {new Date(e.at).toLocaleTimeString([], {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })}
+                        {(e as { atLocal?: string }).atLocal ??
+                          formatTime(new Date(e.at))}
                       </div>
                     </div>
                     {editMode ? (

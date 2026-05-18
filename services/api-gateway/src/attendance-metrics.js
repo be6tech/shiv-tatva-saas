@@ -1,3 +1,5 @@
+import { toLocalDateTimeString } from "./time.js";
+
 /** Net work metrics from attendance events (9h target excludes lunch/break). */
 
 export function sumPairMinutes(events, startType, endType, now = new Date()) {
@@ -80,11 +82,37 @@ export function extractLunchBreakTimes(events) {
   };
 }
 
+function withLocalTimes(fields) {
+  const out = { ...fields };
+  for (const [key, iso] of Object.entries(fields)) {
+    if (iso && key.endsWith("At")) {
+      out[`${key}Local`] = toLocalDateTimeString(iso);
+    }
+  }
+  if (Array.isArray(fields.lunchSessions)) {
+    out.lunchSessions = fields.lunchSessions.map((s) => ({
+      in: s.in,
+      out: s.out,
+      inLocal: toLocalDateTimeString(s.in),
+      outLocal: toLocalDateTimeString(s.out),
+    }));
+  }
+  if (Array.isArray(fields.breakSessions)) {
+    out.breakSessions = fields.breakSessions.map((s) => ({
+      in: s.in,
+      out: s.out,
+      inLocal: toLocalDateTimeString(s.in),
+      outLocal: toLocalDateTimeString(s.out),
+    }));
+  }
+  return out;
+}
+
 /** Fields stored in hrms_attendance (columns + metadata). */
 export function enrichAttendanceDay(day, workTargetMinutes = 540) {
   if (!day) return day;
   const events = day.events ?? [];
   const metrics = computeNetWorkMetrics(events, workTargetMinutes);
   const lunchBreak = extractLunchBreakTimes(events);
-  return { ...day, ...metrics, ...lunchBreak };
+  return withLocalTimes({ ...day, ...metrics, ...lunchBreak });
 }

@@ -12,6 +12,12 @@ import {
   enrichAttendanceDay,
 } from "./attendance-metrics.js";
 import {
+  attendanceDateKey,
+  orgTimezone,
+  toLocalDateTimeString,
+  utcNowIso,
+} from "./time.js";
+import {
   getStorageMode,
   loadPersistedState,
   persistAttendanceDay,
@@ -528,6 +534,7 @@ function attendanceMetricsPayload(day) {
   const metrics = computeNetWorkMetricsForDay(day?.events ?? []);
   return {
     workHoursPerDay: workMinutesPerDay() / 60,
+    timezone: orgTimezone(),
     ...metrics,
   };
 }
@@ -547,7 +554,7 @@ app.get(
   "/attendance/today",
   requireAuth({ roles: ["employee", "admin"] }),
   (req, res) => {
-    const dateKey = new Date().toISOString().slice(0, 10);
+    const dateKey = attendanceDateKey();
     const employeeId = String(req.user?.sub || "");
     const day = attendanceStore.get(attendanceKey(dateKey, employeeId)) || null;
     const shiftId = employeeShift.get(employeeId) || "morning";
@@ -571,7 +578,7 @@ app.post(
     const parsed = attendanceEventSchema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "invalid_body" });
 
-    const dateKey = new Date().toISOString().slice(0, 10);
+    const dateKey = attendanceDateKey();
     const employeeId = String(req.user?.sub || "");
     const emp =
       employees.find((e) => e.id === employeeId) ??
@@ -601,9 +608,13 @@ app.post(
     }
 
     // Check-in allowed any time after portal login (same calendar day); 9h net work counts from check-in.
+    const at = utcNowIso();
     const next = {
       ...day,
-      events: [...day.events, { type: parsed.data.type, at: new Date().toISOString() }],
+      events: [
+        ...day.events,
+        { type: parsed.data.type, at, atLocal: toLocalDateTimeString(at) },
+      ],
     };
     attendanceStore.set(k, next);
     saveAttendanceDay(next);
@@ -620,7 +631,7 @@ app.post(
   "/attendance/undo-last",
   requireAuth({ roles: ["employee", "admin"] }),
   (req, res) => {
-    const dateKey = new Date().toISOString().slice(0, 10);
+    const dateKey = attendanceDateKey();
     const employeeId = String(req.user?.sub || "");
     const k = attendanceKey(dateKey, employeeId);
     const day = attendanceStore.get(k);
@@ -659,7 +670,7 @@ app.post(
     const parsed = schema.safeParse(req.body);
     if (!parsed.success) return res.status(400).json({ error: "invalid_body" });
 
-    const dateKey = new Date().toISOString().slice(0, 10);
+    const dateKey = attendanceDateKey();
     const employeeId = String(req.user?.sub || "");
     const k = attendanceKey(dateKey, employeeId);
     const day = attendanceStore.get(k);
@@ -695,7 +706,7 @@ app.post(
   "/attendance/reset",
   requireAuth({ roles: ["employee", "admin"] }),
   (req, res) => {
-    const dateKey = new Date().toISOString().slice(0, 10);
+    const dateKey = attendanceDateKey();
     const employeeId = String(req.user?.sub || "");
     attendanceStore.delete(attendanceKey(dateKey, employeeId));
     clearAttendanceDay(dateKey, employeeId);
@@ -707,8 +718,8 @@ app.get(
   "/admin/attendance/today",
   requireAuth({ roles: ["admin"] }),
   (_req, res) => {
-    const dateKey = new Date().toISOString().slice(0, 10);
-    const days = [];
+  const dateKey = attendanceDateKey();
+  const days = [];
     for (const [k, v] of attendanceStore.entries()) {
       if (k.startsWith(dateKey + ":")) days.push(v);
     }
@@ -717,7 +728,7 @@ app.get(
 );
 
 app.get("/admin/live-status", requireAuth({ roles: ["admin"] }), (_req, res) => {
-  const dateKey = new Date().toISOString().slice(0, 10);
+  const dateKey = attendanceDateKey();
   const now = Date.now();
   const rows = employees.map((e) => {
     const day = attendanceStore.get(attendanceKey(dateKey, e.id)) || null;
@@ -744,7 +755,7 @@ app.get("/admin/live-status", requireAuth({ roles: ["admin"] }), (_req, res) => 
 });
 
 app.get("/admin/attendance/metrics", requireAuth({ roles: ["admin"] }), (_req, res) => {
-  const dateKey = new Date().toISOString().slice(0, 10);
+  const dateKey = attendanceDateKey();
   const now = Date.now();
   const rows = employees.map((e) => {
     const day = attendanceStore.get(attendanceKey(dateKey, e.id)) || null;
@@ -776,7 +787,7 @@ app.get("/admin/attendance/timeseries", requireAuth({ roles: ["admin"] }), (_req
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(today.getDate() - i);
-    const dateKey = d.toISOString().slice(0, 10);
+    const dateKey = attendanceDateKey(d);
 
     const rows = employees.map((e) => {
       const day = attendanceStore.get(attendanceKey(dateKey, e.id)) || null;
@@ -1371,7 +1382,7 @@ app.post("/notifications/:id/read", requireAuth({ roles: ["admin", "employee"] }
 });
 
 app.get("/admin/notifications/anomalies", requireAuth({ roles: ["admin"] }), async (_req, res) => {
-  const dateKey = new Date().toISOString().slice(0, 10);
+  const dateKey = attendanceDateKey();
   const live = employees.map((e) => {
     const day = attendanceStore.get(attendanceKey(dateKey, e.id)) || null;
     const status = statusFromEvents(day?.events ?? []);

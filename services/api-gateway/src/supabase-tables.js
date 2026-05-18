@@ -1,6 +1,7 @@
 /**
  * Load/save HRMS state from normalized Supabase tables (see apps/web/supabase/hrms_schema.sql).
  */
+import { orgTimezone, toLocalDateTimeString } from "./time.js";
 
 function supabaseConfig() {
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
@@ -63,8 +64,15 @@ function attendanceDayToRow(key, val) {
     lunchOutAt,
     breakInAt,
     breakOutAt,
+    lunchInAtLocal,
+    lunchOutAtLocal,
+    breakInAtLocal,
+    breakOutAtLocal,
+    checkInAtLocal,
+    checkOutAtLocal,
     lunchSessions,
     breakSessions,
+    timezone,
     ...meta
   } = val || {};
   const list = events ?? [];
@@ -98,6 +106,13 @@ function attendanceDayToRow(key, val) {
     lunch_out_at: lunchOut,
     break_in_at: breakIn,
     break_out_at: breakOut,
+    check_in_at_local: checkInAtLocal ?? toLocalDateTimeString(checkIn),
+    check_out_at_local: checkOutAtLocal ?? toLocalDateTimeString(checkOut),
+    lunch_in_at_local: lunchInAtLocal ?? toLocalDateTimeString(lunchIn),
+    lunch_out_at_local: lunchOutAtLocal ?? toLocalDateTimeString(lunchOut),
+    break_in_at_local: breakInAtLocal ?? toLocalDateTimeString(breakIn),
+    break_out_at_local: breakOutAtLocal ?? toLocalDateTimeString(breakOut),
+    timezone: timezone ?? orgTimezone(),
     lunch_sessions: lunchSessionsJson,
     break_sessions: breakSessionsJson,
     net_work_minutes: Number(netWorkMinutes ?? 0),
@@ -591,6 +606,13 @@ export async function upsertAttendanceDay(day) {
       lunch_out_at,
       break_in_at,
       break_out_at,
+      check_in_at_local,
+      check_out_at_local,
+      lunch_in_at_local,
+      lunch_out_at_local,
+      break_in_at_local,
+      break_out_at_local,
+      timezone,
       lunch_sessions,
       break_sessions,
       net_work_minutes,
