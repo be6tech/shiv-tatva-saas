@@ -59,6 +59,12 @@ function attendanceDayToRow(key, val) {
     expectedCheckOutAt,
     lunchMinutes,
     breakMinutes,
+    lunchInAt,
+    lunchOutAt,
+    breakInAt,
+    breakOutAt,
+    lunchSessions,
+    breakSessions,
     ...meta
   } = val || {};
   const list = events ?? [];
@@ -67,12 +73,33 @@ function attendanceDayToRow(key, val) {
   const checkIn = checkInAt ?? checkInFromEvents;
   const checkOut = checkOutAt ?? checkOutFromEvents;
 
+  const lunchIns = list.filter((e) => e.type === "LUNCH_IN").map((e) => e.at);
+  const lunchOuts = list.filter((e) => e.type === "LUNCH_OUT").map((e) => e.at);
+  const breakIns = list.filter((e) => e.type === "BREAK_IN").map((e) => e.at);
+  const breakOuts = list.filter((e) => e.type === "BREAK_OUT").map((e) => e.at);
+  const lunchIn = lunchInAt ?? lunchIns[0] ?? null;
+  const lunchOut = lunchOutAt ?? lunchOuts[0] ?? null;
+  const breakIn = breakInAt ?? breakIns[0] ?? null;
+  const breakOut = breakOutAt ?? breakOuts[0] ?? null;
+  const lunchSessionsJson =
+    lunchSessions ??
+    lunchIns.map((inAt, i) => ({ in: inAt, out: lunchOuts[i] ?? null }));
+  const breakSessionsJson =
+    breakSessions ??
+    breakIns.map((inAt, i) => ({ in: inAt, out: breakOuts[i] ?? null }));
+
   return {
     date_key: date_key || dateKey,
     employee_id: employee_id || employeeId,
     events: list,
     check_in_at: checkIn ?? null,
     check_out_at: checkOut ?? null,
+    lunch_in_at: lunchIn,
+    lunch_out_at: lunchOut,
+    break_in_at: breakIn,
+    break_out_at: breakOut,
+    lunch_sessions: lunchSessionsJson,
+    break_sessions: breakSessionsJson,
     net_work_minutes: Number(netWorkMinutes ?? 0),
     remaining_work_minutes: Number(remainingWorkMinutes ?? 540),
     work_target_minutes: Number(workTargetMinutes ?? 540),
@@ -89,6 +116,12 @@ function attendanceDayToRow(key, val) {
       expectedCheckOutAt: expectedCheckOutAt ?? null,
       lunchMinutes: Number(lunchMinutes ?? 0),
       breakMinutes: Number(breakMinutes ?? 0),
+      lunchInAt: lunchIn,
+      lunchOutAt: lunchOut,
+      breakInAt: breakIn,
+      breakOutAt: breakOut,
+      lunchSessions: lunchSessionsJson,
+      breakSessions: breakSessionsJson,
     },
     updated_at: new Date().toISOString(),
   };
@@ -378,6 +411,12 @@ export async function loadStateFromTables() {
         workTargetMinutes: row.work_target_minutes ?? row.metadata?.workTargetMinutes ?? 540,
         expectedCheckOutAt:
           row.expected_check_out_at ?? row.metadata?.expectedCheckOutAt ?? null,
+        lunchInAt: row.lunch_in_at ?? row.metadata?.lunchInAt ?? null,
+        lunchOutAt: row.lunch_out_at ?? row.metadata?.lunchOutAt ?? null,
+        breakInAt: row.break_in_at ?? row.metadata?.breakInAt ?? null,
+        breakOutAt: row.break_out_at ?? row.metadata?.breakOutAt ?? null,
+        lunchSessions: row.lunch_sessions ?? row.metadata?.lunchSessions ?? [],
+        breakSessions: row.break_sessions ?? row.metadata?.breakSessions ?? [],
         ...(row.metadata && typeof row.metadata === "object" ? row.metadata : {}),
       };
     }
@@ -543,10 +582,17 @@ export async function upsertAttendanceDay(day) {
     await restUpsert(cfg, "hrms_attendance", [row], "date_key,employee_id");
   } catch (err) {
     const msg = String(err?.message || err);
-    if (!msg.includes("column") && !msg.includes("check_in_at")) throw err;
+    if (!msg.includes("column") && !msg.includes("check_in_at") && !msg.includes("lunch_in_at"))
+      throw err;
     const {
       check_in_at,
       check_out_at,
+      lunch_in_at,
+      lunch_out_at,
+      break_in_at,
+      break_out_at,
+      lunch_sessions,
+      break_sessions,
       net_work_minutes,
       remaining_work_minutes,
       work_target_minutes,

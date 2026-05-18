@@ -53,9 +53,38 @@ export function computeNetWorkMetrics(events, workTargetMinutes = 540, now = new
   };
 }
 
+/** Pair lunch/break in-out times from events for database columns. */
+export function extractLunchBreakTimes(events) {
+  const list = events ?? [];
+  const lunchIns = list.filter((e) => e.type === "LUNCH_IN").map((e) => e.at);
+  const lunchOuts = list.filter((e) => e.type === "LUNCH_OUT").map((e) => e.at);
+  const breakIns = list.filter((e) => e.type === "BREAK_IN").map((e) => e.at);
+  const breakOuts = list.filter((e) => e.type === "BREAK_OUT").map((e) => e.at);
+
+  const lunchSessions = lunchIns.map((inAt, i) => ({
+    in: inAt,
+    out: lunchOuts[i] ?? null,
+  }));
+  const breakSessions = breakIns.map((inAt, i) => ({
+    in: inAt,
+    out: breakOuts[i] ?? null,
+  }));
+
+  return {
+    lunchInAt: lunchIns[0] ?? null,
+    lunchOutAt: lunchOuts[0] ?? null,
+    breakInAt: breakIns[0] ?? null,
+    breakOutAt: breakOuts[0] ?? null,
+    lunchSessions,
+    breakSessions,
+  };
+}
+
 /** Fields stored in hrms_attendance (columns + metadata). */
 export function enrichAttendanceDay(day, workTargetMinutes = 540) {
   if (!day) return day;
-  const metrics = computeNetWorkMetrics(day.events ?? [], workTargetMinutes);
-  return { ...day, ...metrics };
+  const events = day.events ?? [];
+  const metrics = computeNetWorkMetrics(events, workTargetMinutes);
+  const lunchBreak = extractLunchBreakTimes(events);
+  return { ...day, ...metrics, ...lunchBreak };
 }
