@@ -6,6 +6,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Mail, Phone, MapPin, ArrowRight } from "lucide-react";
 import { GOOGLE_MAPS_OFFICE_URL, OFFICE_LOCATION_FALLBACK, BE6_MODERN_TECH_URL } from "@/lib/site-urls";
+import { SITE_CONTACT_EMAIL } from "@/lib/site-contact";
 
 function SvgFb(props: SVGProps<SVGSVGElement>) {
   return (
@@ -105,8 +106,8 @@ export function Footer({ variant = "default" }: { variant?: "default" | "dark" }
               <div className="mt-6 space-y-2.5 text-sm">
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 shrink-0 text-[#f97316]" />
-                  <a href="mailto:info@shivtatva.com" className="hover:text-slate-900 dark:hover:text-white">
-                    info@shivtatva.com
+                  <a href={`mailto:${SITE_CONTACT_EMAIL}`} className="hover:text-slate-900 dark:hover:text-white">
+                    {SITE_CONTACT_EMAIL}
                   </a>
                 </div>
                 <div className="flex items-center gap-2">
@@ -259,8 +260,8 @@ export function Footer({ variant = "default" }: { variant?: "default" | "dark" }
             <div className="mt-6 space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 text-[#F57C00]" />
-                <a href="mailto:info@shivtatva.com" className="hover:text-foreground">
-                  info@shivtatva.com
+                <a href={`mailto:${SITE_CONTACT_EMAIL}`} className="hover:text-foreground">
+                  {SITE_CONTACT_EMAIL}
                 </a>
               </div>
               <div className="flex items-center gap-2">

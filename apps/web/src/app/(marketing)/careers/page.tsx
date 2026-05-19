@@ -15,6 +15,7 @@ import { Briefcase, Rocket, Users, Send, Sparkles } from "lucide-react";
 import * as React from "react";
 import { apiFetch } from "@/lib/api";
 import { shouldUseHostedLeadsApi } from "@/lib/marketing-leads";
+import { SITE_CONTACT_EMAIL } from "@/lib/site-contact";
 
 const openings = [
   {
@@ -296,7 +297,7 @@ export default function CareersPage() {
               </button>
               <p className={cn(marketingMuted, "text-xs sm:col-span-2")}>
                 Prefer email? Send your resume to{" "}
-                <span className="font-medium text-slate-900 dark:text-white">careers@shivtatva.com</span>.
+                <span className="font-medium text-slate-900 dark:text-white">{SITE_CONTACT_EMAIL}</span>.
               </p>
             </div>
           </div>

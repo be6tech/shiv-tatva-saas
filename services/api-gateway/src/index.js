@@ -403,7 +403,7 @@ let anomalyEmitted = {};
 /** @type {any} */
 let orgSettings = {
   companyName: "Shiv Tatva Solutions Private Limited",
-  supportEmail: "support@shivtatva.com",
+  supportEmail: "info@shivtatva.tech",
   supportPhone: "+91 90000 00000",
   locationText: "Cohort Coworking Space, 1st Floor, Kondapur, Hyderabad",
   workHoursPerDay: 9,

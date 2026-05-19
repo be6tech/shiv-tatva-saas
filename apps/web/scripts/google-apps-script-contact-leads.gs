@@ -14,7 +14,7 @@
 
 var SPREADSHEET_ID = "1oRK2Gsw1oYDVIoHNkzBf3DXngQNOId6eCrm76fX0KxM";
 /** Lead alert inbox (empty string = skip email). */
-var NOTIFY_EMAIL = "ganeshbandaru800@gmail.com";
+var NOTIFY_EMAIL = "info@shivtatva.tech";
 
 /** Opening /exec in a browser sends GET — avoids "doGet not found" and confirms deployment. */
 function doGet() {

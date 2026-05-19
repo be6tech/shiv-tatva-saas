@@ -10,7 +10,7 @@
 
 var SPREADSHEET_ID = "1oRK2Gsw1oYDVIoHNkzBf3DXngQNOId6eCrm76fX0KxM";
 var SHEET_NAME = "Careers";
-var NOTIFY_EMAIL = "ganeshbandaru800@gmail.com";
+var NOTIFY_EMAIL = "info@shivtatva.tech";
 
 function doGet() {
   return jsonOut({

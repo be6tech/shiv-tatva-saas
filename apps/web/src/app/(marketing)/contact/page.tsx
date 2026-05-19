@@ -15,6 +15,7 @@ import { GOOGLE_MAPS_OFFICE_URL, OFFICE_LOCATION_FALLBACK, OSM_OFFICE_MAP_EMBED_
 import * as React from "react";
 import { apiFetch } from "@/lib/api";
 import { shouldUseHostedLeadsApi } from "@/lib/marketing-leads";
+import { SITE_CONTACT_EMAIL } from "@/lib/site-contact";
 
 function isNetworkFailure(e: unknown): boolean {
   const msg = e instanceof Error ? e.message : "";
@@ -253,8 +254,8 @@ export default function ContactPage() {
               {submitting ? "Submitting…" : "Send message"}
             </button>
             <p className={cn(marketingMuted, "text-xs sm:col-span-2")}>
-              Submissions are saved; ganeshbandaru800@gmail.com is notified by email when the lead is
-              received. Admin notifications also appear in the dashboard when the leads API is online.
+              Submissions are saved; {SITE_CONTACT_EMAIL} is notified when a message is received.
+              Admin notifications also appear in the dashboard when the leads API is online.
             </p>
           </form>
         </div>
@@ -265,7 +266,12 @@ export default function ContactPage() {
             <div className={cn("mt-4 space-y-3 text-sm", marketingBody)}>
               <div className="flex items-center gap-2">
                 <Mail className="h-4 w-4 shrink-0 text-[#ea580c] dark:text-[#f97316]" />
-                {publicSettings?.supportEmail ?? "info@shivtatva.com"}
+                <a
+                  href={`mailto:${publicSettings?.supportEmail ?? SITE_CONTACT_EMAIL}`}
+                  className="hover:text-slate-900 dark:hover:text-white"
+                >
+                  {publicSettings?.supportEmail ?? SITE_CONTACT_EMAIL}
+                </a>
               </div>
               <div className="flex items-center gap-2">
                 <Phone className="h-4 w-4 shrink-0 text-[#ea580c] dark:text-[#f97316]" />
