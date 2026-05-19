@@ -17,10 +17,27 @@ import { apiFetch } from "@/lib/api";
 import { shouldUseHostedLeadsApi } from "@/lib/marketing-leads";
 
 const openings = [
-  { title: "Full Stack Developer", type: "Full-time", location: "Hybrid", dept: "Engineering" },
-  { title: "UI/UX Designer", type: "Full-time", location: "Remote", dept: "Design" },
-  { title: "HR Executive", type: "Full-time", location: "On-site", dept: "HR" },
-  { title: "Intern - React / Next.js", type: "Internship", location: "Remote", dept: "Learning" },
+  {
+    title: "Frontend Developer",
+    experience: "0–2 years",
+    type: "Full-time",
+    location: "Hybrid",
+    dept: "Engineering",
+  },
+  {
+    title: "BDE (Business Development Executive)",
+    experience: "0–2 years",
+    type: "Full-time",
+    location: "Hybrid",
+    dept: "Sales",
+  },
+  {
+    title: "Digital Marketing",
+    experience: "2–4 years",
+    type: "Full-time",
+    location: "Hybrid",
+    dept: "Marketing",
+  },
 ];
 
 type CareerPayload = {
@@ -182,7 +199,7 @@ export default function CareersPage() {
                     <div>
                       <div className={cn("font-semibold", marketingStrong)}>{o.title}</div>
                       <div className={cn("mt-1 text-xs", marketingMuted)}>
-                        {o.dept} • {o.type} • {o.location}
+                        {o.experience} experience • {o.dept} • {o.type} • {o.location}
                       </div>
                     </div>
                     <button
