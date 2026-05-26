@@ -29,6 +29,7 @@ const products: NavItem[] = [
 ];
 
 const solutions: NavItem[] = [
+  { label: "Employee Onboarding", href: "/#onboarding" },
   { label: "Startups", href: "/solutions#startups" },
   { label: "Enterprises", href: "/solutions#enterprises" },
   { label: "Educational Institutions", href: "/solutions#education" },
@@ -238,7 +239,7 @@ export function Navbar({ appearance = "default" }: { appearance?: "default" | "l
                   )}
                 >
                   <Link
-                    href="/login/admin"
+                    href="/login?tab=admin"
                     className={cn(
                       "flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition",
                       isLanding
@@ -250,7 +251,7 @@ export function Navbar({ appearance = "default" }: { appearance?: "default" | "l
                     Admin Login
                   </Link>
                   <Link
-                    href="/login/employee"
+                    href="/login?tab=employee"
                     className={cn(
                       "flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition",
                       isLanding
@@ -260,6 +261,18 @@ export function Navbar({ appearance = "default" }: { appearance?: "default" | "l
                   >
                     <Sparkles className="h-4 w-4 text-[#F57C00]" />
                     Employee Login
+                  </Link>
+                  <Link
+                    href="/login?tab=onboarding"
+                    className={cn(
+                      "flex items-center gap-2 rounded-xl px-3 py-2 text-sm transition",
+                      isLanding
+                        ? "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-white/5 dark:hover:text-white"
+                        : "text-muted-foreground hover:text-foreground hover:bg-muted/60"
+                    )}
+                  >
+                    <Sparkles className="h-4 w-4 text-[#F57C00]" />
+                    Onboarding
                   </Link>
                 </div>
               </div>

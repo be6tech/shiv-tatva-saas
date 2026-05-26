@@ -16,6 +16,7 @@ import {
   ClipboardList,
   LogOut,
   Inbox,
+  UserPlus,
   ArrowLeft,
 } from "lucide-react";
 import { ThemeToggle } from "@/components/theme-toggle";
@@ -31,6 +32,7 @@ const adminNav = [
   { href: "/admin/leave", label: "Leave Management", icon: ClipboardList },
   { href: "/admin/tasks", label: "Tasks", icon: ClipboardList },
   { href: "/admin/leads", label: "Leads", icon: Inbox },
+  { href: "/admin/onboarding", label: "Onboarding", icon: UserPlus },
   { href: "/admin/payroll", label: "Payroll", icon: Wallet },
   { href: "/admin/analytics", label: "Analytics", icon: BarChart3 },
   { href: "/admin/notifications", label: "Notifications", icon: Bell },

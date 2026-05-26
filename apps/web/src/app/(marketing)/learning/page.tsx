@@ -14,6 +14,7 @@ import {
   Briefcase,
   Presentation,
   Sparkles,
+  UserPlus,
   Coffee,
   Terminal,
   Cloud,
@@ -102,12 +103,13 @@ export default function LearningPage() {
       <div className="grid gap-4 lg:grid-cols-12">
         <div className="space-y-4 lg:col-span-4">
           {[
-            { title: "Courses", icon: GraduationCap, desc: "Modern curriculum aligned to enterprise stacks." },
-            { title: "Internship Programs", icon: Briefcase, desc: "Hands-on projects & mentorship." },
-            { title: "Certifications", icon: BadgeCheck, desc: "Completion certificates & skill validation." },
-            { title: "Workshops", icon: Presentation, desc: "Short-format sessions for teams and colleges." },
+            { title: "Onboarding", icon: UserPlus, desc: "How new learners join programs at BE6 / Shiv Tatva.", anchor: "onboarding" },
+            { title: "Courses", icon: GraduationCap, desc: "Modern curriculum aligned to enterprise stacks.", anchor: "courses" },
+            { title: "Internship Programs", icon: Briefcase, desc: "Hands-on projects & mentorship.", anchor: "internships" },
+            { title: "Certifications", icon: BadgeCheck, desc: "Completion certificates & skill validation.", anchor: "certifications" },
+            { title: "Workshops", icon: Presentation, desc: "Short-format sessions for teams and colleges.", anchor: "workshops" },
           ].map((b) => (
-            <div key={b.title} className={cn(marketingSurface, "p-6")}>
+            <a key={b.title} href={`#${b.anchor}`} className={cn(marketingSurface, "block p-6 transition hover:border-orange-200/70 dark:hover:border-orange-500/30")}>
               <div className="flex items-center gap-3">
                 <div className={cn(marketingInset, "flex h-11 w-11 shrink-0 items-center justify-center border-0 p-0")}>
                   <b.icon className="h-5 w-5 text-[#ea580c] dark:text-[#f97316]" />
@@ -115,7 +117,7 @@ export default function LearningPage() {
                 <div className={cn("text-base font-semibold", marketingStrong)}>{b.title}</div>
               </div>
               <p className={cn("mt-3 text-sm", marketingBody)}>{b.desc}</p>
-            </div>
+            </a>
           ))}
 
           <div className={cn(marketingSurface, "p-6")}>
@@ -138,7 +140,52 @@ export default function LearningPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-8">
+        <div className="lg:col-span-8 space-y-8">
+          <section id="onboarding" className={cn(marketingSurface, "scroll-mt-24 p-6 sm:p-8")}>
+            <div className="flex items-center gap-2">
+              <UserPlus className="h-5 w-5 text-[#ea580c] dark:text-[#f97316]" />
+              <h2 className={cn("text-xl font-semibold", marketingStrong)}>Learner onboarding</h2>
+            </div>
+            <p className={cn("mt-3 text-sm", marketingBody)}>
+              A clear path from application to your first day in the program — orientation, tools access,
+              and mentor connect.
+            </p>
+            <ol className="mt-6 space-y-4">
+              {[
+                {
+                  title: "Apply & confirm seat",
+                  desc: "Submit interest via be6moderntech.com or partner colleges; receive welcome email.",
+                },
+                {
+                  title: "Orientation session",
+                  desc: "Program roadmap, expectations, and communication channels (Slack / email).",
+                },
+                {
+                  title: "Tooling & accounts",
+                  desc: "GitHub, LMS, and project repo access with setup checklist.",
+                },
+                {
+                  title: "Mentor assignment",
+                  desc: "Weekly syncs, code reviews, and internship task board.",
+                },
+                {
+                  title: "Certification track",
+                  desc: "Milestones, assessments, and certificate on successful completion.",
+                },
+              ].map((item, i) => (
+                <li key={item.title} className={cn(marketingInset, "flex gap-3 p-4")}>
+                  <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/15 text-xs font-bold text-orange-800 dark:text-orange-200">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <div>
+                    <div className={cn("font-medium", marketingStrong)}>{item.title}</div>
+                    <p className={cn("mt-1 text-sm", marketingBody)}>{item.desc}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+
           <div id="courses" className="grid gap-4 sm:grid-cols-2">
             {courses.map((c) => (
               <div key={c.title} className={cn(marketingSurface, "p-6")}>

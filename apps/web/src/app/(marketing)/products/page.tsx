@@ -18,7 +18,12 @@ const products = [
     id: "hrms",
     title: "HRMS Platform",
     desc: "Employee lifecycle management with RBAC, documents, and workflows.",
-    bullets: ["Employee directory + profile sync", "Leave approvals", "Role-based access (RBAC-ready)"],
+    bullets: [
+      "Employee onboarding workflows",
+      "Employee directory + profile sync",
+      "Leave approvals",
+      "Role-based access (RBAC-ready)",
+    ],
   },
   {
     id: "crm",

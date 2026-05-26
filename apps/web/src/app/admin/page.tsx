@@ -2,7 +2,7 @@
 
 import { DashboardShell } from "@/components/dashboard/dashboard-shell";
 import Link from "next/link";
-import { Users, CalendarClock, BarChart3, Bell } from "lucide-react";
+import { Users, CalendarClock, BarChart3, Bell, UserPlus } from "lucide-react";
 import * as React from "react";
 import { apiFetch } from "@/lib/api";
 import { useAuth } from "@/features/auth/useAuth";
@@ -75,6 +75,7 @@ export default function AdminDashboard() {
 
           <div className="grid gap-4 sm:grid-cols-2">
             {[
+              { href: "/admin/onboarding", label: "Onboarding", icon: UserPlus, desc: "New hire documents • ID proofs • offer letter" },
               { href: "/admin/employees", label: "Employees", icon: Users, desc: "Directory • departments • roles" },
               { href: "/admin/attendance", label: "Attendance", icon: CalendarClock, desc: "Live status • exports • overtime" },
               { href: "/admin/analytics", label: "Analytics", icon: BarChart3, desc: "Daily attendance • productivity • trends" },

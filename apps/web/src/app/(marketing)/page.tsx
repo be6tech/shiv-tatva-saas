@@ -2,6 +2,7 @@
 
 import { Navbar } from "@/components/marketing/navbar";
 import { Footer } from "@/components/marketing/footer";
+import { OnboardingSection } from "@/components/marketing/onboarding-section";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -444,6 +445,8 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        <OnboardingSection />
 
         {/* Testimonials */}
         <section className={cn("py-16 sm:py-20", sectionLine)}>

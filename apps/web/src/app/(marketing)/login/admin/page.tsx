@@ -1,123 +1,18 @@
-"use client";
+import { Suspense } from "react";
+import { LoginPortal } from "@/components/auth/login-portal";
 
-import Link from "next/link";
-import Image from "next/image";
-import { Lock, ArrowLeft } from "lucide-react";
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/features/auth/useAuth";
-import { LoginDashboardContinue } from "@/components/auth/login-dashboard-continue";
-import { LoginErrorAlert } from "@/components/auth/login-error-alert";
-import { marketingPageRoot, marketingSurface, marketingInput } from "@/components/marketing/marketing-styles";
-import { loginErrorMessage } from "@/lib/auth-errors";
-import { cn } from "@/lib/utils";
+function LoginFallback() {
+  return (
+    <div className="grid min-h-screen place-items-center px-4 py-12">
+      <div className="h-10 w-10 animate-pulse rounded-full bg-muted" aria-hidden />
+    </div>
+  );
+}
 
 export default function AdminLoginPage() {
-  const router = useRouter();
-  const auth = useAuth();
-  const [identifier, setIdentifier] = React.useState("");
-  const [password, setPassword] = React.useState("");
-  const [error, setError] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(false);
-
-  const onSubmit = async () => {
-    setError(null);
-    setLoading(true);
-    try {
-      const res = await fetch("/api/auth/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ identifier, password }),
-      });
-      const data = (await res.json().catch(() => ({}))) as {
-        ok?: boolean;
-        user?: { id: string; role: "admin" };
-        error?: string;
-      };
-      if (!res.ok) {
-        setError(loginErrorMessage(data.error, "admin"));
-        return;
-      }
-      if (!data.user?.id || data.user.role !== "admin") {
-        setError("Login failed. Please try again.");
-        return;
-      }
-      auth.login({ role: data.user.role, userId: data.user.id });
-      router.push("/admin");
-    } catch {
-      setError("Can't reach the sign-in service. Try again in a moment.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
-    <div className={cn(marketingPageRoot, "relative grid min-h-screen place-items-center px-4 py-12")}>
-      <div
-        className={cn(
-          marketingSurface,
-          "relative w-full max-w-md p-7 shadow-lg shadow-slate-900/5 dark:shadow-[0_40px_120px_rgba(0,0,0,.45)]"
-        )}
-      >
-        <div className="flex items-center gap-3">
-          <div className="relative h-11 w-11 overflow-hidden rounded-2xl border border-border bg-muted/60 dark:bg-white/5 dark:ring-1 dark:ring-white/10">
-            <Image src="/brand/shivtatva-logo.png" alt="Shiv Tatva" fill className="object-contain p-1" />
-          </div>
-          <div>
-            <div className="text-sm font-medium text-slate-600 dark:text-slate-400">Admin Login</div>
-            <div className="text-lg font-semibold text-slate-900 dark:text-white">Shiv Tatva HRMS</div>
-          </div>
-        </div>
-
-        <div className="mt-6 grid gap-3">
-          <input
-            id="admin-login-email"
-            className={marketingInput}
-            placeholder="Admin email"
-            type="email"
-            value={identifier}
-            onChange={(e) => setIdentifier(e.target.value)}
-          />
-          <input
-            id="admin-login-password"
-            className={marketingInput}
-            placeholder="Password"
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") void onSubmit();
-            }}
-          />
-          <div className="flex justify-end">
-            <Link
-              href="/login/admin/forgot"
-              className="text-xs font-medium text-[#ea580c] hover:underline dark:text-[#f97316]"
-            >
-              Forgot password?
-            </Link>
-          </div>
-          <button
-            type="button"
-            onClick={onSubmit}
-            disabled={loading}
-            className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#ea580c] to-[#fb923c] px-4 py-3 text-sm font-semibold text-white dark:from-[#f97316] dark:to-amber-400"
-          >
-            <Lock className="h-4 w-4" />
-            {loading ? "Signing in..." : "Login"}
-          </button>
-          <LoginErrorAlert message={error} showNetworkHint={false} />
-          <LoginDashboardContinue portal="admin" />
-          <Link
-            className="inline-flex items-center gap-2 text-sm font-medium text-slate-600 underline-offset-4 hover:text-slate-900 hover:underline dark:text-slate-400 dark:hover:text-white"
-            href="/"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to website
-          </Link>
-        </div>
-      </div>
-    </div>
+    <Suspense fallback={<LoginFallback />}>
+      <LoginPortal initialTab="admin" />
+    </Suspense>
   );
 }
