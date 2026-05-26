@@ -192,7 +192,7 @@ export function DashboardShell({
     if (auth.role && auth.role !== role) {
       router.replace(auth.role === "admin" ? "/admin" : "/employee");
     }
-  }, [auth.hydrated, auth.token, auth.role, role, router]);
+  }, [auth.hydrated, auth.token, auth.role, auth.userId, role, router]);
 
   React.useEffect(() => {
     if (!auth.hydrated || !auth.token || role !== "employee") {

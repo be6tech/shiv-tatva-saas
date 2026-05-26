@@ -117,7 +117,7 @@ export function OnboardingSection({ id = "onboarding", className }: OnboardingSe
           </div>
 
           <motion.ol variants={stagger} className="space-y-3">
-            {steps.map((s, i) => (
+            {steps.map((s) => (
               <motion.li
                 key={s.step}
                 variants={fadeUp}
