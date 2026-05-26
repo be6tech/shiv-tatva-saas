@@ -8,7 +8,7 @@ import {
 
 type Ctx = { params: Promise<{ id: string; fileKey: string }> };
 
-const ALLOWED = new Set([
+const ALLOWED = new Set<string>([
   ...ONBOARDING_FILE_KEYS,
   ...ONBOARDING_OPTIONAL_FILE_KEYS,
 ]);
