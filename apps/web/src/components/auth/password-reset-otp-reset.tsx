@@ -25,7 +25,6 @@ function ResetForm({
   forgotHref,
   loginHref,
   identifierParam,
-  identifierLabel,
   identifierPlaceholder,
   identifierType = "text",
 }: PasswordResetOtpResetProps) {
