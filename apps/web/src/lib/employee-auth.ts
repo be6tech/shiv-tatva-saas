@@ -141,6 +141,16 @@ export async function saveEmployeeResetToken(
   });
 }
 
+/** Stores hashed OTP in reset_token (scrypt format). */
+export async function saveEmployeeOtpReset(
+  employeeId: string,
+  email: string,
+  otpHash: string,
+  expires: string
+): Promise<boolean> {
+  return saveEmployeeResetToken(employeeId, email, otpHash, expires);
+}
+
 export async function signEmployeeToken(employeeId: string): Promise<string> {
   return new SignJWT({
     sub: employeeId,
