@@ -353,17 +353,17 @@ function clearAttendanceDay(dateKey, employeeId) {
   void removeAttendanceDay(dateKey, employeeId);
 }
 
+/** Roster from Employee_Master_List.xlsx (employeesSeed). Ignores legacy BE1999… rows in storage. */
 function mergeEmployeesFromDb(persisted) {
-  if (!Array.isArray(persisted) || persisted.length === 0) return [...employeesSeed];
-  const onlyDemo =
-    persisted.length === 1 && String(persisted[0]?.id ?? "") === "ST-EMP-001";
-  if (onlyDemo) return [...employeesSeed];
-  const ids = new Set(persisted.map((e) => e.id));
-  const merged = [...persisted];
-  for (const seed of employeesSeed) {
-    if (!ids.has(seed.id)) merged.push(seed);
+  const seedById = new Map(employeesSeed.map((e) => [e.id, { ...e }]));
+  if (Array.isArray(persisted)) {
+    for (const row of persisted) {
+      const id = String(row?.id ?? "");
+      if (!id || !seedById.has(id)) continue;
+      seedById.set(id, { ...seedById.get(id), ...row });
+    }
   }
-  return merged;
+  return [...seedById.values()];
 }
 
 let employees = [...employeesSeed];

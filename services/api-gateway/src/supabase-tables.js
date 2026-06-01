@@ -142,6 +142,26 @@ function attendanceDayToRow(key, val) {
   };
 }
 
+async function restDelete(cfg, table, query) {
+  const url = `${cfg.base}/rest/v1/${table}${query}`;
+  const res = await fetch(url, {
+    method: "DELETE",
+    headers: headers(cfg.key, { Prefer: "return=minimal" }),
+  });
+  if (!res.ok && res.status !== 404) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`${table} DELETE failed (${res.status}): ${text.slice(0, 200)}`);
+  }
+}
+
+/** Remove pre-STS26 roster rows (and cascaded attendance/leave via FK). */
+export async function deleteLegacyHrmsEmployees() {
+  const cfg = supabaseConfig();
+  if (!cfg) return;
+  await restDelete(cfg, "hrms_employees", "?id=like.BE1999*");
+  await restDelete(cfg, "hrms_employees", "?id=eq.ST-EMP-001");
+}
+
 async function restUpsert(cfg, table, rows, onConflict) {
   if (!rows.length) return;
   const conflict = onConflict ? `?on_conflict=${encodeURIComponent(onConflict)}` : "";
@@ -476,6 +496,8 @@ export async function loadStateFromTables() {
 export async function saveStateToTables(snapshot) {
   const cfg = supabaseConfig();
   if (!cfg) throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY required");
+
+  await deleteLegacyHrmsEmployees();
 
   const employees = Array.isArray(snapshot.employees) ? snapshot.employees : [];
   await restUpsert(cfg, "hrms_employees", employees.map(employeeToRow), "id");
