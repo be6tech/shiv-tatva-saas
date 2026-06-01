@@ -378,7 +378,7 @@ export default function AdminEmployeesPage() {
           {modalMode === "create" ? (
             <input
               className="sm:col-span-2 h-11 rounded-2xl bg-muted/50 ring-1 ring-border dark:bg-white/5 dark:ring-white/10 px-4 text-sm outline-none focus:ring-[#f97316]/40"
-              placeholder="Employee ID (e.g. BE19990034)"
+              placeholder="Employee ID (e.g. STS26ASE023)"
               value={fId}
               onChange={(e) => setFId(e.target.value.toUpperCase())}
             />

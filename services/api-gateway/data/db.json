@@ -3,17 +3,15 @@
     {
       "id": "STS26ASE001",
       "name": "Admin",
-      "department": "HR",
+      "department": "Operations",
       "designation": "ADMIN",
       "status": "Active",
       "email": "",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
-        "HR operations",
-        "Talent management",
-        "HRMS"
+        "Professional skills"
       ],
       "experienceYears": 1
     },
@@ -26,7 +24,7 @@
       "email": "mighttians97@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "HR operations",
         "Talent management",
@@ -43,7 +41,7 @@
       "email": "sakichennakesavulu5@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -53,14 +51,14 @@
     },
     {
       "id": "STS26ASE004",
-      "name": "K.D. Prasad",
+      "name": "K.d. Prasad",
       "department": "Learning & Development",
       "designation": "ASSOCIATE TRAINEE",
       "status": "Active",
       "email": "karedlaprasad13@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -70,14 +68,14 @@
     },
     {
       "id": "STS26ASE005",
-      "name": "M.K. Swamy",
+      "name": "M.k. Swamy",
       "department": "Learning & Development",
       "designation": "ASSOCIATE TRAINEE",
       "status": "Active",
       "email": "mareedukumarswamy@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -87,14 +85,14 @@
     },
     {
       "id": "STS26ASE006",
-      "name": "N.N.Durgarao",
+      "name": "N.n.durgarao",
       "department": "Learning & Development",
       "designation": "ASSOCIATE TRAINEE",
       "status": "Active",
       "email": "ndrnimagadda@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -111,7 +109,7 @@
       "email": "raghuramkedasu2002@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -128,7 +126,7 @@
       "email": "naveench9997@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "Business development",
         "Client outreach",
@@ -142,10 +140,10 @@
       "department": "Business Development",
       "designation": "BDE",
       "status": "Active",
-      "email": "Sreekanthp98614@gmail.com",
+      "email": "sreekanthp98614@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "Business development",
         "Client outreach",
@@ -162,7 +160,7 @@
       "email": "boddapatisumasuma@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "Business development",
         "Client outreach",
@@ -179,7 +177,7 @@
       "email": "lavanyabypureddy61@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "Business development",
         "Client outreach",
@@ -196,7 +194,7 @@
       "email": "sunilkumarmelapu418@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -213,7 +211,7 @@
       "email": "bhaskark874@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -227,10 +225,10 @@
       "department": "Learning & Development",
       "designation": "ASSOCIATE TRAINEE",
       "status": "Active",
-      "email": "Dileepkumarg557@gmail.com",
+      "email": "dileepkumarg557@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -247,7 +245,7 @@
       "email": "phaneendra@be6technologies.in",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -258,19 +256,19 @@
     {
       "id": "STS26BOE016",
       "name": "Pallavi",
-      "department": "HR",
-      "designation": "BACK OFFICE EXECUTIVE",
+      "department": "Business Development",
+      "designation": "BDE",
       "status": "Active",
       "email": "pallavigandrothu007@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
-        "HR operations",
-        "Talent management",
-        "HRMS"
+        "Business development",
+        "Client outreach",
+        "CRM"
       ],
-      "experienceYears": 1
+      "experienceYears": 2
     },
     {
       "id": "STS26ASE017",
@@ -281,7 +279,7 @@
       "email": "eluriprasanthi2016@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -298,7 +296,7 @@
       "email": "ayyappareddychalla7@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -308,14 +306,14 @@
     },
     {
       "id": "STS26ASE019",
-      "name": "Pushkar",
+      "name": "Pushkarpushkarsai",
       "department": "Learning & Development",
       "designation": "ASSOCIATE TRAINEE",
       "status": "Active",
-      "email": "pushkarsai2288@gmail.com",
+      "email": "pushkarpushkarsai2288@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -332,7 +330,7 @@
       "email": "rambabugorli1@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -349,7 +347,7 @@
       "email": "gowrisudabattula836@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "Business development",
         "Client outreach",
@@ -359,14 +357,14 @@
     },
     {
       "id": "STS26ASE022",
-      "name": "J. Prasad",
+      "name": "J.prasad",
       "department": "Learning & Development",
       "designation": "ASSOCIATE TRAINEE",
       "status": "Active",
       "email": "varaprasadjujjuri@gmail.com",
       "phone": "",
       "location": "Hyderabad",
-      "joinedAt": "2024-06-01",
+      "joinedAt": "2026-01-01",
       "skills": [
         "On-the-job training",
         "Fundamentals",
@@ -400,110 +398,10 @@
     "STS26BDE021": "morning",
     "STS26ASE022": "morning"
   },
-  "leaveRequests": [
-    {
-      "id": "LV-MPAUNTPB-X3V7D3",
-      "employeeId": "BE19990030",
-      "employeeName": "Naga Durga Rao",
-      "department": "Learning & Development",
-      "type": "Sick",
-      "from": "2026-05-19",
-      "to": "2026-05-20",
-      "durationDays": 2,
-      "reason": "feeling unwell",
-      "status": "Approved",
-      "createdAt": "2026-05-18T06:55:30.335Z",
-      "updatedAt": "2026-05-18T06:57:24.141Z",
-      "history": [
-        {
-          "at": "2026-05-18T06:57:24.141Z",
-          "by": "admin@shivtatva.com",
-          "action": "Approved",
-          "note": ""
-        },
-        {
-          "at": "2026-05-18T06:55:30.335Z",
-          "by": "BE19990030",
-          "action": "Applied"
-        }
-      ]
-    },
-    {
-      "id": "LV-MP56UBL6-N8JII9",
-      "employeeId": "ST-EMP-001",
-      "employeeName": "Demo Employee",
-      "department": "Engineering",
-      "type": "Sick",
-      "from": "2026-05-15",
-      "to": "2026-05-16",
-      "durationDays": 2,
-      "reason": "due to forget mind in office",
-      "status": "Approved",
-      "createdAt": "2026-05-14T07:49:51.786Z",
-      "updatedAt": "2026-05-14T07:57:06.736Z",
-      "history": [
-        {
-          "at": "2026-05-14T07:57:06.736Z",
-          "by": "admin@shivtatva.com",
-          "action": "Approved",
-          "note": ""
-        },
-        {
-          "at": "2026-05-14T07:49:51.786Z",
-          "by": "ST-EMP-001",
-          "action": "Applied"
-        }
-      ]
-    }
-  ],
+  "leaveRequests": [],
   "tasks": [],
   "payslips": [],
-  "notifications": [
-    {
-      "id": "NTF-MPAUQ9IL-H6T56L",
-      "scope": "employee",
-      "recipientId": "BE19990030",
-      "severity": "success",
-      "category": "leave",
-      "title": "Leave approved",
-      "message": "Sick leave 2026-05-19 → 2026-05-20 was approved.",
-      "createdAt": "2026-05-18T06:57:24.141Z",
-      "read": false
-    },
-    {
-      "id": "NTF-MPAUNTPB-TBL81K",
-      "scope": "admin",
-      "recipientId": null,
-      "severity": "info",
-      "category": "leave",
-      "title": "Leave request submitted",
-      "message": "Naga Durga Rao (BE19990030) requested Sick leave: 2026-05-19 → 2026-05-20 (2 days)",
-      "createdAt": "2026-05-18T06:55:30.335Z",
-      "read": false
-    },
-    {
-      "id": "NTF-MP573N74-5NA1GH",
-      "scope": "employee",
-      "recipientId": "ST-EMP-001",
-      "severity": "success",
-      "category": "leave",
-      "title": "Leave approved",
-      "message": "Sick leave 2026-05-15 → 2026-05-16 was approved.",
-      "createdAt": "2026-05-14T07:57:06.736Z",
-      "read": false
-    },
-    {
-      "id": "NTF-MP56UBL6-3114M5",
-      "scope": "admin",
-      "recipientId": null,
-      "severity": "info",
-      "category": "leave",
-      "title": "Leave request submitted",
-      "message": "Demo Employee (ST-EMP-001) requested Sick leave: 2026-05-15 → 2026-05-16 (2 days)",
-      "createdAt": "2026-05-14T07:49:51.786Z",
-      "read": false
-    }
-  ],
+  "notifications": [],
   "leads": [],
   "anomalyEmitted": {},
   "orgSettings": {
