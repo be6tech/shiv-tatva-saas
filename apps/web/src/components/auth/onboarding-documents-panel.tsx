@@ -20,9 +20,16 @@ import {
   ONBOARDING_FILE_KEYS,
   ONBOARDING_FILE_LABELS,
   ONBOARDING_POLICIES,
+  ONBOARDING_MAX_FILE_BYTES,
+  ONBOARDING_MAX_TOTAL_BYTES,
+  formatBytes,
   type OnboardingFileKey,
   type OnboardingPolicyId,
 } from "@/lib/onboarding-fields";
+import {
+  onboardingSubmitErrorMessage,
+  type OnboardingSubmitErrorPayload,
+} from "@/lib/onboarding-submit-errors";
 
 function Section({
   title,
@@ -162,8 +169,19 @@ export function OnboardingDocumentsPanel({ onGoToEmployeeLogin }: OnboardingDocu
   const [stepIndex, setStepIndex] = React.useState(0);
   const step = steps[stepIndex]!;
 
+  const pickFile = (key: OnboardingFileKey | "policiesDoc", file: File | null, onPick: (f: File | null) => void) => {
+    if (file && file.size > ONBOARDING_MAX_FILE_BYTES) {
+      setError(
+        `${file.name} is too large (max ${formatBytes(ONBOARDING_MAX_FILE_BYTES)} per file). Compress and try again.`
+      );
+      return;
+    }
+    setError(null);
+    onPick(file);
+  };
+
   const setFile = (key: OnboardingFileKey, file: File | null) => {
-    setFiles((prev) => ({ ...prev, [key]: file }));
+    pickFile(key, file, (f) => setFiles((prev) => ({ ...prev, [key]: f })));
   };
 
   const requiredUploadsCount = ONBOARDING_FILE_KEYS.length;
@@ -273,6 +291,33 @@ export function OnboardingDocumentsPanel({ onGoToEmployeeLogin }: OnboardingDocu
       return;
     }
 
+    let totalBytes = 0;
+    for (const key of ONBOARDING_FILE_KEYS) {
+      const f = files[key]!;
+      if (f.size > ONBOARDING_MAX_FILE_BYTES) {
+        setError(
+          `${ONBOARDING_FILE_LABELS[key].label} is too large (max ${formatBytes(ONBOARDING_MAX_FILE_BYTES)}).`
+        );
+        return;
+      }
+      totalBytes += f.size;
+    }
+    if (policiesDoc) {
+      if (policiesDoc.size > ONBOARDING_MAX_FILE_BYTES) {
+        setError(
+          `${ONBOARDING_FILE_LABELS.policiesDoc.label} is too large (max ${formatBytes(ONBOARDING_MAX_FILE_BYTES)}).`
+        );
+        return;
+      }
+      totalBytes += policiesDoc.size;
+    }
+    if (totalBytes > ONBOARDING_MAX_TOTAL_BYTES) {
+      setError(
+        `Total upload size is ${formatBytes(totalBytes)}. Maximum is ${formatBytes(ONBOARDING_MAX_TOTAL_BYTES)} — compress PDFs/photos and try again.`
+      );
+      return;
+    }
+
     const form = new FormData();
     form.set("name", name.trim());
     form.set("phone", phone.trim());
@@ -296,19 +341,9 @@ export function OnboardingDocumentsPanel({ onGoToEmployeeLogin }: OnboardingDocu
     setLoading(true);
     try {
       const res = await fetch("/api/onboarding/documents", { method: "POST", body: form });
-      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      const data = (await res.json().catch(() => ({}))) as OnboardingSubmitErrorPayload & { ok?: boolean };
       if (!res.ok) {
-        if (data.error === "file_too_large") {
-          setError("Each file must be under 1 MB. Use PDF or compressed images.");
-        } else if (data.error === "not_configured") {
-          setError("Upload is not configured yet. Email HR with your documents.");
-        } else if (data.error === "experience_required") {
-          setError("Previous company details are required for experienced candidates.");
-        } else if (data.error === "policies_required") {
-          setError("Acknowledge all company policies before submitting.");
-        } else {
-          setError("Could not submit. Check all fields and try again.");
-        }
+        setError(onboardingSubmitErrorMessage(data));
         return;
       }
       setSuccess(true);
@@ -353,8 +388,9 @@ export function OnboardingDocumentsPanel({ onGoToEmployeeLogin }: OnboardingDocu
           <div>
             <div className="text-sm font-semibold text-slate-900 dark:text-white">Employee onboarding</div>
             <div className="mt-1 text-xs text-slate-600 dark:text-slate-400">
-              Upload required documents and submit to HR. Most files can be <span className="font-semibold">PDF</span>{" "}
-              or clear photos.
+              Upload required documents and submit to HR. PDF or photos — max{" "}
+              <span className="font-semibold">{formatBytes(ONBOARDING_MAX_FILE_BYTES)}</span> per file,{" "}
+              <span className="font-semibold">{formatBytes(ONBOARDING_MAX_TOTAL_BYTES)}</span> total.
             </div>
           </div>
           <div className="rounded-xl border border-border/70 bg-white px-3 py-2 text-xs font-semibold text-slate-700 dark:border-white/10 dark:bg-white/5 dark:text-slate-200">
@@ -502,7 +538,7 @@ export function OnboardingDocumentsPanel({ onGoToEmployeeLogin }: OnboardingDocu
                   {...ONBOARDING_FILE_LABELS.policiesDoc}
                   required={false}
                   file={policiesDoc}
-                  onPick={setPoliciesDoc}
+                  onPick={(f) => pickFile("policiesDoc", f, setPoliciesDoc)}
                 />
               </div>
               <div className="rounded-2xl border border-border/60 bg-white/60 p-3 dark:border-white/10 dark:bg-white/[0.03]">

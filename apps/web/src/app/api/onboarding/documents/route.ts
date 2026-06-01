@@ -1,26 +1,22 @@
 import { NextResponse } from "next/server";
+import { getSupabaseAdminConfig } from "@/lib/admin-auth";
 import { ONBOARDING_FILE_KEYS, ONBOARDING_POLICIES } from "@/lib/onboarding-fields";
+import {
+  ONBOARDING_MAX_FILE_BYTES,
+  ONBOARDING_MAX_TOTAL_BYTES,
+} from "@/lib/onboarding-upload-limits";
 
-const MAX_FILE_BYTES = 1_000_000;
-
-function normalizeSupabaseProjectUrl(raw: string): string {
-  let u = raw.trim().replace(/\/+$/, "");
-  u = u.replace(/\/rest\/v1\/?$/i, "");
-  return u;
-}
+export const maxDuration = 60;
 
 function newId(): string {
   return `onb_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 }
 
-async function readFileField(
-  form: FormData,
-  key: string
-): Promise<{ filename: string; mime: string; data: string } | null> {
-  const file = form.get(key);
-  if (!(file instanceof File) || file.size === 0) return null;
-  if (file.size > MAX_FILE_BYTES) {
-    throw new Error(`file_too_large:${key}`);
+type EncodedFile = { filename: string; mime: string; data: string };
+
+async function encodeUploadFile(file: File, fieldKey: string): Promise<EncodedFile> {
+  if (file.size > ONBOARDING_MAX_FILE_BYTES) {
+    throw new Error(`file_too_large:${fieldKey}`);
   }
   const buf = Buffer.from(await file.arrayBuffer());
   return {
@@ -86,15 +82,38 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "policies_required" }, { status: 400 });
   }
 
-  const files: Record<string, { filename: string; mime: string; data: string }> = {};
+  const files: Record<string, EncodedFile> = {};
+  const pending: { key: string; file: File }[] = [];
+  let totalRawBytes = 0;
+
+  for (const key of ONBOARDING_FILE_KEYS) {
+    const file = form.get(key);
+    if (!(file instanceof File) || file.size === 0) {
+      return NextResponse.json({ ok: false, error: "documents_required", field: key }, { status: 400 });
+    }
+    if (file.size > ONBOARDING_MAX_FILE_BYTES) {
+      return NextResponse.json({ ok: false, error: "file_too_large", field: key }, { status: 400 });
+    }
+    totalRawBytes += file.size;
+    pending.push({ key, file });
+  }
+
+  const optionalPolicies = form.get("policiesDoc");
+  if (optionalPolicies instanceof File && optionalPolicies.size > 0) {
+    if (optionalPolicies.size > ONBOARDING_MAX_FILE_BYTES) {
+      return NextResponse.json({ ok: false, error: "file_too_large", field: "policiesDoc" }, { status: 400 });
+    }
+    totalRawBytes += optionalPolicies.size;
+    pending.push({ key: "policiesDoc", file: optionalPolicies });
+  }
+
+  if (totalRawBytes > ONBOARDING_MAX_TOTAL_BYTES) {
+    return NextResponse.json({ ok: false, error: "payload_too_large" }, { status: 400 });
+  }
 
   try {
-    for (const key of ONBOARDING_FILE_KEYS) {
-      const uploaded = await readFileField(form, key);
-      if (!uploaded) {
-        return NextResponse.json({ ok: false, error: "documents_required", field: key }, { status: 400 });
-      }
-      files[key] = uploaded;
+    for (const { key, file } of pending) {
+      files[key] = await encodeUploadFile(file, key);
     }
   } catch (e) {
     const msg = e instanceof Error ? e.message : "";
@@ -104,22 +123,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: false, error: "invalid_file" }, { status: 400 });
   }
 
-  try {
-    const policiesDoc = await readFileField(form, "policiesDoc");
-    if (policiesDoc) files.policiesDoc = policiesDoc;
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : "";
-    if (msg.startsWith("file_too_large:")) {
-      return NextResponse.json({ ok: false, error: "file_too_large" }, { status: 400 });
-    }
-    return NextResponse.json({ ok: false, error: "invalid_file" }, { status: 400 });
-  }
-
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
-  const rawUrl =
-    process.env.SUPABASE_URL?.trim() || process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
-
-  if (!supabaseKey || !rawUrl) {
+  const cfg = getSupabaseAdminConfig();
+  if (!cfg) {
     return NextResponse.json({ ok: false, error: "not_configured" }, { status: 503 });
   }
 
@@ -145,15 +150,14 @@ export async function POST(req: Request) {
     status: "submitted",
   };
 
-  const base = normalizeSupabaseProjectUrl(rawUrl);
-  const url = `${base}/rest/v1/hrms_onboarding_submissions`;
+  const url = `${cfg.base}/rest/v1/hrms_onboarding_submissions`;
 
   const res = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      apikey: supabaseKey,
-      Authorization: `Bearer ${supabaseKey}`,
+      apikey: cfg.key,
+      Authorization: `Bearer ${cfg.key}`,
       Prefer: "return=minimal",
     },
     body: JSON.stringify(row),

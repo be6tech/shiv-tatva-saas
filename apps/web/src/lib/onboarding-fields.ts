@@ -1,3 +1,11 @@
+import {
+  ONBOARDING_MAX_FILE_BYTES,
+  ONBOARDING_MAX_TOTAL_BYTES,
+  formatBytes,
+} from "@/lib/onboarding-upload-limits";
+
+export { ONBOARDING_MAX_FILE_BYTES, ONBOARDING_MAX_TOTAL_BYTES, formatBytes };
+
 /** Required file uploads (multipart field names). */
 export const ONBOARDING_FILE_KEYS = [
   "aadharPhoto",
