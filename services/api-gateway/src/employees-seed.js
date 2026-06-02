@@ -71,7 +71,7 @@ export const employeesSeed = [
     department: "Learning & Development",
     designation: "ASSOCIATE TRAINEE",
     status: "Active",
-    email: "ndrnimagadda@gmail.com",
+    email: "ndrnimmagadda@gmail.com",
     phone: "",
     location: "Hyderabad",
     joinedAt: "2026-01-01",

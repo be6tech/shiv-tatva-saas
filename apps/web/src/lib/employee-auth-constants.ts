@@ -7,7 +7,7 @@ export const EMPLOYEE_ROSTER = [
   { id: "STS26ASE003", email: "sakichennakesavulu5@gmail.com" },
   { id: "STS26ASE004", email: "karedlaprasad13@gmail.com" },
   { id: "STS26ASE005", email: "mareedukumarswamy@gmail.com" },
-  { id: "STS26ASE006", email: "ndrnimagadda@gmail.com" },
+  { id: "STS26ASE006", email: "ndrnimmagadda@gmail.com" },
   { id: "STS26ASE007", email: "raghuramkedasu2002@gmail.com" },
   { id: "STS26BDE008", email: "naveench9997@gmail.com" },
   { id: "STS26BDE009", email: "sreekanthp98614@gmail.com" },

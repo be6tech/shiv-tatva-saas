@@ -403,16 +403,17 @@ create table if not exists public.employee_users (
 
 alter table public.employee_users enable row level security;
 
--- Drop legacy BE1999… / demo rows (same emails are re-inserted with STS26… IDs below)
+-- Re-import safe: remove legacy + previous STS26 rows, then upsert roster
 delete from public.employee_users
 where employee_id like 'BE1999%'
-   or employee_id = 'ST-EMP-001';
+   or employee_id = 'ST-EMP-001'
+   or employee_id like 'STS26%';
 
 insert into public.employee_users (employee_id, email, password_hash)
 values
 {values}
-on conflict (email) do update set
-  employee_id = excluded.employee_id,
+on conflict (employee_id) do update set
+  email = excluded.email,
   password_hash = excluded.password_hash,
   updated_at = now();
 """

@@ -104,7 +104,7 @@ export const employees: Employee[] = [
     department: "Learning & Development",
     skills: ["On-the-job training", "Fundamentals", "Team collaboration"],
     experienceYears: 0,
-    email: "ndrnimagadda@gmail.com",
+    email: "ndrnimmagadda@gmail.com",
     status: "Active",
     joiningDate: "2026-01-01",
     bio: "N.n.durgarao serves as ASSOCIATE TRAINEE at Shiv Tatva Solutions, contributing to delivery and team growth.",

@@ -14,10 +14,11 @@ create table if not exists public.employee_users (
 
 alter table public.employee_users enable row level security;
 
--- Drop legacy BE1999… / demo rows (same emails are re-inserted with STS26… IDs below)
+-- Re-import safe: remove legacy + previous STS26 rows, then upsert roster
 delete from public.employee_users
 where employee_id like 'BE1999%'
-   or employee_id = 'ST-EMP-001';
+   or employee_id = 'ST-EMP-001'
+   or employee_id like 'STS26%';
 
 insert into public.employee_users (employee_id, email, password_hash)
 values
@@ -25,7 +26,7 @@ values
   ('STS26ASE003', 'sakichennakesavulu5@gmail.com', 'f4298c5a7302c99350dec80533fbbc33:d188636c159647671ad1a90842ab9b2400feb8591f2dfe4e33ae83407ced02b8c11edfa847f7526d3128cc119e745d42351248104d8beb7aea4e0d0952b1cf97'),
   ('STS26ASE004', 'karedlaprasad13@gmail.com', 'f4298c5a7302c99350dec80533fbbc33:d188636c159647671ad1a90842ab9b2400feb8591f2dfe4e33ae83407ced02b8c11edfa847f7526d3128cc119e745d42351248104d8beb7aea4e0d0952b1cf97'),
   ('STS26ASE005', 'mareedukumarswamy@gmail.com', 'f4298c5a7302c99350dec80533fbbc33:d188636c159647671ad1a90842ab9b2400feb8591f2dfe4e33ae83407ced02b8c11edfa847f7526d3128cc119e745d42351248104d8beb7aea4e0d0952b1cf97'),
-  ('STS26ASE006', 'ndrnimagadda@gmail.com', 'f4298c5a7302c99350dec80533fbbc33:d188636c159647671ad1a90842ab9b2400feb8591f2dfe4e33ae83407ced02b8c11edfa847f7526d3128cc119e745d42351248104d8beb7aea4e0d0952b1cf97'),
+  ('STS26ASE006', 'ndrnimmagadda@gmail.com', 'f4298c5a7302c99350dec80533fbbc33:d188636c159647671ad1a90842ab9b2400feb8591f2dfe4e33ae83407ced02b8c11edfa847f7526d3128cc119e745d42351248104d8beb7aea4e0d0952b1cf97'),
   ('STS26ASE007', 'raghuramkedasu2002@gmail.com', 'f4298c5a7302c99350dec80533fbbc33:d188636c159647671ad1a90842ab9b2400feb8591f2dfe4e33ae83407ced02b8c11edfa847f7526d3128cc119e745d42351248104d8beb7aea4e0d0952b1cf97'),
   ('STS26BDE008', 'naveench9997@gmail.com', 'f4298c5a7302c99350dec80533fbbc33:d188636c159647671ad1a90842ab9b2400feb8591f2dfe4e33ae83407ced02b8c11edfa847f7526d3128cc119e745d42351248104d8beb7aea4e0d0952b1cf97'),
   ('STS26BDE009', 'sreekanthp98614@gmail.com', 'f4298c5a7302c99350dec80533fbbc33:d188636c159647671ad1a90842ab9b2400feb8591f2dfe4e33ae83407ced02b8c11edfa847f7526d3128cc119e745d42351248104d8beb7aea4e0d0952b1cf97'),
@@ -42,7 +43,7 @@ values
   ('STS26ASE020', 'rambabugorli1@gmail.com', 'f4298c5a7302c99350dec80533fbbc33:d188636c159647671ad1a90842ab9b2400feb8591f2dfe4e33ae83407ced02b8c11edfa847f7526d3128cc119e745d42351248104d8beb7aea4e0d0952b1cf97'),
   ('STS26BDE021', 'gowrisudabattula836@gmail.com', 'f4298c5a7302c99350dec80533fbbc33:d188636c159647671ad1a90842ab9b2400feb8591f2dfe4e33ae83407ced02b8c11edfa847f7526d3128cc119e745d42351248104d8beb7aea4e0d0952b1cf97'),
   ('STS26ASE022', 'varaprasadjujjuri@gmail.com', 'f4298c5a7302c99350dec80533fbbc33:d188636c159647671ad1a90842ab9b2400feb8591f2dfe4e33ae83407ced02b8c11edfa847f7526d3128cc119e745d42351248104d8beb7aea4e0d0952b1cf97')
-on conflict (email) do update set
-  employee_id = excluded.employee_id,
+on conflict (employee_id) do update set
+  email = excluded.email,
   password_hash = excluded.password_hash,
   updated_at = now();
