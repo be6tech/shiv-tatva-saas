@@ -334,5 +334,34 @@ export const employees: Employee[] = [
     bio: "J.prasad serves as ASSOCIATE TRAINEE at Shiv Tatva Solutions, contributing to delivery and team growth.",
     projects: [],
     certifications: [],
-  }
+  },
+  {
+  id: "STS26ASE025",
+  name: "G S N V Sai Kumar",
+  designation: "ASSOCIATE TRAINEE",
+  department: "Learning & Development",
+  skills: ["On-the-job training", "Fundamentals", "Team collaboration"],
+  experienceYears: 0,
+  email: "sivanaiduganta@gmail.com",
+  status: "Active",
+  joiningDate: "2026-01-01",
+  bio: "G S N V Sai Kumar serves as ASSOCIATE TRAINEE at Shiv Tatva Solutions, contributing to delivery and team growth.",
+  projects: [],
+  certifications: [],
+},
+{
+  id: "STS26BDE028",
+  name: "G Soumya",
+  designation: "BDE",
+  department: "Business Development",
+  skills: ["Business development", "Client outreach", "CRM"],
+  experienceYears: 2,
+  email: "soumyagoud600@gmail.com",
+  status: "Active",
+  joiningDate: "2026-01-01",
+  bio: "G Soumya serves as BDE at Shiv Tatva Solutions, contributing to delivery and team growth.",
+  projects: [],
+  certifications: [],
+}
+  
 ];
